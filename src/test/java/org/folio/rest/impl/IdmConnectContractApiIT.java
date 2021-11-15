@@ -9,20 +9,20 @@ import com.google.common.io.Resources;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.parsing.Parser;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.ext.web.client.WebClient;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import javax.ws.rs.core.Response;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Contract;
 import org.folio.rest.jaxrs.model.Contract.Status;
 import org.folio.rest.jaxrs.model.Contracts;
@@ -43,6 +43,7 @@ public class IdmConnectContractApiIT {
   private static final Map<String, String> OKAPI_HEADERS = Map.of("x-okapi-tenant", TENANT);
   private static final String CONTRACT_JSON = "examplecontract.json";
   private static final Vertx vertx = Vertx.vertx();
+  private static TenantUtil tenantUtil;
 
   @BeforeClass
   public static void beforeClass(TestContext context) {
@@ -58,6 +59,9 @@ public class IdmConnectContractApiIT {
             .addHeader("Content-Type", "application/json")
             .build();
 
+    tenantUtil =
+        new TenantUtil(
+            new TenantClient(HOST + ":" + port, TENANT, "someToken", WebClient.create(vertx)));
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
     DeploymentOptions options =
@@ -73,14 +77,11 @@ public class IdmConnectContractApiIT {
 
   @Test
   public void testThatWeCanGetPostPutAndDelete(TestContext context) throws IOException {
-    Promise<AsyncResult<Response>> promise = Promise.promise();
-    new CustomTenantApi()
-        .postTenantSync(
-            new TenantAttributes().withModuleTo(ModuleName.getModuleVersion()),
-            OKAPI_HEADERS,
-            promise::complete,
-            vertx.getOrCreateContext());
-    promise.future().onComplete(context.asyncAssertSuccess());
+    Async async = context.async();
+    tenantUtil
+        .setupTenant(new TenantAttributes().withModuleTo(ModuleName.getModuleVersion()))
+        .onComplete(context.asyncAssertSuccess(h -> async.complete()));
+    async.awaitSuccess();
 
     String jsonStr =
         Resources.toString(Resources.getResource(CONTRACT_JSON), StandardCharsets.UTF_8);
