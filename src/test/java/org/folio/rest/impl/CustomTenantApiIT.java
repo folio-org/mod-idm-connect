@@ -13,7 +13,6 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.JacksonCodec;
-import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
@@ -89,11 +88,9 @@ public class CustomTenantApiIT {
 
   @Test
   public void testWithoutLoadSampleAttribute(TestContext context) {
-    Async async = context.async();
     tenantUtil
         .setupTenant(new TenantAttributes().withModuleTo(ModuleName.getModuleVersion()))
-        .onComplete(context.asyncAssertSuccess(h -> async.complete()));
-    async.awaitSuccess();
+        .onComplete(context.asyncAssertSuccess());
 
     Contracts getResult = given().get().then().extract().as(Contracts.class);
     assertThat(getResult)
@@ -106,14 +103,12 @@ public class CustomTenantApiIT {
 
   @Test
   public void testWithLoadSampleAttribute(TestContext context) {
-    Async async = context.async();
     tenantUtil
         .setupTenant(
             new TenantAttributes()
                 .withModuleTo(ModuleName.getModuleVersion())
                 .withParameters(List.of(new Parameter().withKey("loadSample").withValue("true"))))
-        .onComplete(context.asyncAssertSuccess(h -> async.complete()));
-    async.awaitSuccess();
+        .onComplete(context.asyncAssertSuccess());
 
     Contracts getResult = given().get().then().extract().as(Contracts.class);
     assertThat(getResult)

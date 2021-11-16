@@ -13,7 +13,6 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
@@ -86,18 +85,14 @@ public class IdmConnectContractApiIT {
 
   @Before
   public void setUp(TestContext context) {
-    Async async = context.async();
     tenantUtil
         .setupTenant(new TenantAttributes().withModuleTo(ModuleName.getModuleVersion()))
-        .onComplete(context.asyncAssertSuccess(h -> async.complete()));
-    async.awaitSuccess();
+        .onComplete(context.asyncAssertSuccess());
   }
 
   @After
   public void tearDown(TestContext context) {
-    Async async = context.async();
-    tenantUtil.teardownTenant().onComplete(context.asyncAssertSuccess(h -> async.complete()));
-    async.awaitSuccess();
+    tenantUtil.teardownTenant().onComplete(context.asyncAssertSuccess());
   }
 
   @Test
