@@ -30,6 +30,7 @@ import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.rest.tools.utils.VertxUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class IdmConnectContractApiIT {
   private static final String TENANT = "diku";
   private static final Map<String, String> OKAPI_HEADERS = Map.of("x-okapi-tenant", TENANT);
   private static final String CONTRACT_JSON = "examplecontract.json";
-  private static final Vertx vertx = Vertx.vertx();
+  private static final Vertx vertx = VertxUtils.getVertxFromContextOrNew();
   private static TenantUtil tenantUtil;
 
   @BeforeClass

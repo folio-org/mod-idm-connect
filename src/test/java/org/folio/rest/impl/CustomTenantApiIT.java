@@ -31,6 +31,7 @@ import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.rest.tools.utils.VertxUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -43,7 +44,7 @@ public class CustomTenantApiIT {
   private static final String HOST = "http://localhost";
   private static final String TENANT = "diku";
   private static final Map<String, String> OKAPI_HEADERS = Map.of("x-okapi-tenant", TENANT);
-  private static final Vertx vertx = Vertx.vertx();
+  private static final Vertx vertx = VertxUtils.getVertxFromContextOrNew();
   private static List<Contract> exampleContracts;
   private static TenantUtil tenantUtil;
 
