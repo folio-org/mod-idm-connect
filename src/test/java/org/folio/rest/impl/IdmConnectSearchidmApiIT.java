@@ -23,6 +23,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import java.util.Map;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.rest.tools.utils.VertxUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -43,7 +44,7 @@ public class IdmConnectSearchidmApiIT {
   private static final String HOST = "http://localhost";
   private static final String TENANT = "diku";
   private static final Map<String, String> OKAPI_HEADERS = Map.of("x-okapi-tenant", TENANT);
-  private static final Vertx vertx = Vertx.vertx();
+  private static final Vertx vertx = VertxUtils.getVertxFromContextOrNew();
   private static final String IDM_TOKEN = "someToken";
   private static String IDM_MOCK_URL;
 

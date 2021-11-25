@@ -6,11 +6,13 @@ version: v1.0
 types:
   contract: !include contract.json
   contracts: !include contracts.json
+  errors: !include raml-util/schemas/errors.schema
 
 traits:
   language: !include raml-util/traits/language.raml
   pageable: !include raml-util/traits/pageable.raml
   searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
   collection: !include raml-util/rtypes/collection.raml
@@ -23,6 +25,8 @@ resourceTypes:
         searchable: {description: "", example: ""},
         pageable
       ]
+    post:
+      is: [validate]
     type:
       collection:
         schemaCollection: contracts
@@ -30,6 +34,8 @@ resourceTypes:
         exampleCollection: !include examples/contracts.json
         exampleItem: !include examples/contract.json
     /{id}:
+      put:
+        is: [validate]
       type:
         collection-item:
           schema: contract

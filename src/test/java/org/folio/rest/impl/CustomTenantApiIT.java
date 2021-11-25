@@ -13,7 +13,6 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.JacksonCodec;
-import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
@@ -31,6 +30,7 @@ import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.rest.tools.utils.VertxUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -43,7 +43,7 @@ public class CustomTenantApiIT {
   private static final String HOST = "http://localhost";
   private static final String TENANT = "diku";
   private static final Map<String, String> OKAPI_HEADERS = Map.of("x-okapi-tenant", TENANT);
-  private static final Vertx vertx = Vertx.vertx();
+  private static final Vertx vertx = VertxUtils.getVertxFromContextOrNew();
   private static List<Contract> exampleContracts;
   private static TenantUtil tenantUtil;
 
@@ -88,11 +88,9 @@ public class CustomTenantApiIT {
 
   @Test
   public void testWithoutLoadSampleAttribute(TestContext context) {
-    Async async = context.async();
     tenantUtil
         .setupTenant(new TenantAttributes().withModuleTo(ModuleName.getModuleVersion()))
-        .onComplete(context.asyncAssertSuccess(h -> async.complete()));
-    async.awaitSuccess();
+        .onComplete(context.asyncAssertSuccess());
 
     Contracts getResult = given().get().then().extract().as(Contracts.class);
     assertThat(getResult)
@@ -105,14 +103,12 @@ public class CustomTenantApiIT {
 
   @Test
   public void testWithLoadSampleAttribute(TestContext context) {
-    Async async = context.async();
     tenantUtil
         .setupTenant(
             new TenantAttributes()
                 .withModuleTo(ModuleName.getModuleVersion())
                 .withParameters(List.of(new Parameter().withKey("loadSample").withValue("true"))))
-        .onComplete(context.asyncAssertSuccess(h -> async.complete()));
-    async.awaitSuccess();
+        .onComplete(context.asyncAssertSuccess());
 
     Contracts getResult = given().get().then().extract().as(Contracts.class);
     assertThat(getResult)

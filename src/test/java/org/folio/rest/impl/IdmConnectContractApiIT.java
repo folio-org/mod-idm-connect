@@ -13,7 +13,6 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
@@ -26,11 +25,15 @@ import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Contract;
 import org.folio.rest.jaxrs.model.Contract.Status;
 import org.folio.rest.jaxrs.model.Contracts;
+import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.rest.tools.utils.VertxUtils;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,11 +45,16 @@ public class IdmConnectContractApiIT {
   private static final String TENANT = "diku";
   private static final Map<String, String> OKAPI_HEADERS = Map.of("x-okapi-tenant", TENANT);
   private static final String CONTRACT_JSON = "examplecontract.json";
-  private static final Vertx vertx = Vertx.vertx();
+  private static final Vertx vertx = VertxUtils.getVertxFromContextOrNew();
   private static TenantUtil tenantUtil;
+  private static Contract expectedContract;
 
   @BeforeClass
-  public static void beforeClass(TestContext context) {
+  public static void beforeClass(TestContext context) throws IOException {
+    String jsonStr =
+        Resources.toString(Resources.getResource(CONTRACT_JSON), StandardCharsets.UTF_8);
+    expectedContract = Json.decodeValue(jsonStr, Contract.class);
+
     int port = NetworkUtils.nextFreePort();
     RestAssured.reset();
     RestAssured.baseURI = HOST;
@@ -75,18 +83,20 @@ public class IdmConnectContractApiIT {
     RestAssured.reset();
   }
 
-  @Test
-  public void testThatWeCanGetPostPutAndDelete(TestContext context) throws IOException {
-    Async async = context.async();
+  @Before
+  public void setUp(TestContext context) {
     tenantUtil
         .setupTenant(new TenantAttributes().withModuleTo(ModuleName.getModuleVersion()))
-        .onComplete(context.asyncAssertSuccess(h -> async.complete()));
-    async.awaitSuccess();
+        .onComplete(context.asyncAssertSuccess());
+  }
 
-    String jsonStr =
-        Resources.toString(Resources.getResource(CONTRACT_JSON), StandardCharsets.UTF_8);
-    Contract expectedContract = Json.decodeValue(jsonStr, Contract.class);
+  @After
+  public void tearDown(TestContext context) {
+    tenantUtil.teardownTenant().onComplete(context.asyncAssertSuccess());
+  }
 
+  @Test
+  public void testThatWeCanGetPostPutAndDelete() {
     // POST
     Contract postResult =
         given().body(expectedContract).post().then().statusCode(201).extract().as(Contract.class);
@@ -164,5 +174,31 @@ public class IdmConnectContractApiIT {
 
     // GET by id
     given().pathParam("id", postResult.getId()).get("/{id}").then().statusCode(404);
+  }
+
+  @Test
+  public void testThatPostWithInvalidContractReturns422() {
+    given().body(new Contract().withPersonal(new Personal())).post().then().statusCode(422);
+  }
+
+  @Test
+  public void testThatPutWithInvalidContractReturns422() {
+    // POST
+    Contract postResult =
+        given().body(expectedContract).post().then().statusCode(201).extract().as(Contract.class);
+    assertThat(postResult)
+        .hasFieldOrProperty("id")
+        .hasFieldOrProperty("metadata")
+        .usingRecursiveComparison()
+        .ignoringFields("id", "metadata")
+        .isEqualTo(expectedContract);
+
+    // PUT invalid contract
+    given()
+        .pathParam("id", postResult.getId())
+        .body(postResult.withPersonal(new Personal()))
+        .put("/{id}")
+        .then()
+        .statusCode(422);
   }
 }
