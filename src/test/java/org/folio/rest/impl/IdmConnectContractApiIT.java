@@ -4,12 +4,14 @@ import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Index.atIndex;
 import static org.folio.rest.impl.Constants.BASE_PATH_CONTRACTS;
+import static org.folio.rest.impl.Constants.PATH_BULK_DELETE;
 
 import com.google.common.io.Resources;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.parsing.Parser;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -18,13 +20,17 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
+import org.folio.rest.jaxrs.model.BulkDeleteRequest;
+import org.folio.rest.jaxrs.model.BulkDeleteResponse;
 import org.folio.rest.jaxrs.model.Contract;
 import org.folio.rest.jaxrs.model.Contract.Status;
 import org.folio.rest.jaxrs.model.Contracts;
+import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
@@ -200,5 +206,61 @@ public class IdmConnectContractApiIT {
         .put("/{id}")
         .then()
         .statusCode(422);
+  }
+
+  @Test
+  public void testThatBulkDeleteWithInvalidRequestsFails() {
+    given().post(PATH_BULK_DELETE).then().statusCode(400);
+    given().body(new BulkDeleteRequest()).post(PATH_BULK_DELETE).then().statusCode(422);
+  }
+
+  @Test
+  public void testThatBulkDeleteSucceeds(TestContext context) {
+    tenantUtil
+        .setupTenant( // load sample data
+            new TenantAttributes()
+                .withModuleTo(ModuleName.getModuleVersion())
+                .withParameters(List.of(new Parameter().withKey("loadSample").withValue("true"))))
+        .map(
+            v -> {
+              List<String> uuids =
+                  List.of(
+                      "465ce0b3-10cd-4da2-8848-db85b63a0a32",
+                      "7f5473c0-e7c3-427c-9202-ba97a1385e50",
+                      "8c08a4ee-e8ce-4fb2-823a-05393c429ee8",
+                      "a11f000b-6dd7-48d9-b685-2e934a497047",
+                      "6b842509-7ddf-4d43-b53a-c97443aa8bb5",
+                      "d4ef9cd7-e57c-4708-bf5a-fba64f622e82", // not present in sample data
+                      "'5c551294-e387-4de2-92d2-5cfe4fa8788d'" // invalid UUID
+                      );
+              uuids.stream()
+                  .limit(5)
+                  .forEach(id -> given().pathParam("id", id).get("/{id}").then().statusCode(200));
+
+              assertThat(
+                      given()
+                          .body(new BulkDeleteRequest().withUuids(uuids))
+                          .post(PATH_BULK_DELETE)
+                          .then()
+                          .statusCode(200)
+                          .extract()
+                          .as(BulkDeleteResponse.class))
+                  .satisfies(
+                      resp -> {
+                        assertThat(resp.getRequested()).isEqualTo(7);
+                        assertThat(resp.getDeleted()).isEqualTo(5);
+                        assertThat(resp.getFailed()).isEqualTo(2);
+                        assertThat(resp.getFailedItems())
+                            .containsExactlyInAnyOrder(
+                                "d4ef9cd7-e57c-4708-bf5a-fba64f622e82",
+                                "'5c551294-e387-4de2-92d2-5cfe4fa8788d'");
+                      });
+
+              uuids.stream()
+                  .limit(6)
+                  .forEach(id -> given().pathParam("id", id).get("/{id}").then().statusCode(404));
+              return Future.succeededFuture();
+            })
+        .onComplete(context.asyncAssertSuccess());
   }
 }
