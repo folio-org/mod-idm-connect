@@ -4,6 +4,7 @@ import static org.folio.rest.impl.Constants.MSG_IDM_URL_NOT_SET;
 import static org.folio.rest.impl.Constants.TABLE_NAME_CONTRACTS;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -14,14 +15,21 @@ import io.vertx.ext.web.client.WebClient;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import org.folio.okapi.common.GenericCompositeFuture;
+import org.folio.rest.jaxrs.model.BulkDeleteRequest;
+import org.folio.rest.jaxrs.model.BulkDeleteResponse;
 import org.folio.rest.jaxrs.model.Contract;
 import org.folio.rest.jaxrs.model.Contracts;
 import org.folio.rest.jaxrs.resource.IdmConnect;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.PostgresClient;
 
 public class IdmConnectApi implements IdmConnect {
 
@@ -94,6 +102,47 @@ public class IdmConnectApi implements IdmConnect {
         vertxContext,
         DeleteIdmConnectContractByIdResponse.class,
         asyncResultHandler);
+  }
+
+  @Override
+  public void postIdmConnectContractBulkDelete(
+      BulkDeleteRequest entity,
+      Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) {
+
+    PostgresClient pgClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
+
+    List<Future<String>> results =
+        entity.getUuids().stream()
+            .map(
+                id ->
+                    pgClient
+                        .delete(TABLE_NAME_CONTRACTS, id)
+                        .transform(
+                            ar -> {
+                              if (ar.failed() || ar.result().rowCount() == 0) {
+                                return Future.succeededFuture(id);
+                              } else {
+                                return Future.succeededFuture(null);
+                              }
+                            }))
+            .collect(Collectors.toList());
+
+    CompositeFuture join = GenericCompositeFuture.join(results);
+    join.onComplete(
+        ar -> {
+          List<String> failedUUIDs =
+              join.<String>list().stream().filter(Objects::nonNull).collect(Collectors.toList());
+          asyncResultHandler.handle(
+              Future.succeededFuture(
+                  PostIdmConnectContractBulkDeleteResponse.respond200WithApplicationJson(
+                      new BulkDeleteResponse()
+                          .withRequested(entity.getUuids().size())
+                          .withDeleted(entity.getUuids().size() - failedUUIDs.size())
+                          .withFailed(failedUUIDs.size())
+                          .withFailedItems(failedUUIDs))));
+        });
   }
 
   @Override
