@@ -27,6 +27,15 @@
         },
         {
           "methods": [
+            "POST"
+          ],
+          "pathPattern": "/idm-connect/contract/bulk-delete",
+          "permissionsRequired": [
+            "idmconnect.contract.bulk-delete"
+          ]
+        },
+        {
+          "methods": [
             "GET"
           ],
           "pathPattern": "/idm-connect/contract/{id}",
@@ -106,6 +115,11 @@
       "description": "Delete contracts"
     },
     {
+      "permissionName": "idmconnect.contract.bulk-delete",
+      "displayName": "idmconnect contract bulk-delete",
+      "description": "Delete multiple contracts in bulk"
+    },
+    {
       "permissionName": "idmconnect.searchidm.get",
       "displayName": "idmconnect searchidm get",
       "description": "Search external IDM system"
@@ -118,7 +132,8 @@
         "idmconnect.contract.get",
         "idmconnect.contract.post",
         "idmconnect.contract.put",
-        "idmconnect.contract.delete"
+        "idmconnect.contract.delete",
+        "idmconnect.contract.bulk-delete"
       ]
     },
     {
