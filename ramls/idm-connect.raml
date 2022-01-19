@@ -6,6 +6,8 @@ version: v1.0
 types:
   contract: !include contract.json
   contracts: !include contracts.json
+  bulk-delete-request: !include bulk-delete-request.json
+  bulk-delete-response: !include bulk-delete-response.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -40,6 +42,28 @@ resourceTypes:
         collection-item:
           schema: contract
           exampleItem: !include examples/contract.json
+    /bulk-delete:
+      description: Delete multiple walk-in contracts
+      post:
+        is: [ validate ]
+        body:
+          application/json:
+            type: bulk-delete-request
+        responses:
+          200:
+            description: Request successful
+            body:
+              application/json:
+                type: bulk-delete-response
+          400:
+            description: Bad request
+            body:
+              text/plain:
+          500:
+            description: Internal server error
+            body:
+              text/plain:
+
   /searchidm:
     description: Query external IDM system for existing users
     get:
