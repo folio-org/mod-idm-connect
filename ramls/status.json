@@ -2,9 +2,11 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Status of a walk-in contract",
   "enum": [
-    "activated",
-    "conflict",
-    "created",
-    "pending"
+    "draft",
+    "transmission_error",
+    "transmission_error_edit",
+    "pending",
+    "pending_edit",
+    "updated"
   ]
 }
