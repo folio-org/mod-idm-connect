@@ -110,7 +110,7 @@ public class IdmConnectContractApiIT {
         .hasFieldOrProperty("id")
         .hasFieldOrProperty("metadata")
         .usingRecursiveComparison()
-        .ignoringFields("id", "metadata")
+        .ignoringFields("id", "metadata", "version")
         .isEqualTo(expectedContract);
 
     // GET
@@ -126,7 +126,7 @@ public class IdmConnectContractApiIT {
                               .hasFieldOrProperty("id")
                               .hasFieldOrProperty("metadata")
                               .usingRecursiveComparison()
-                              .ignoringFields("id", "metadata")
+                              .ignoringFields("id", "metadata", "version")
                               .isEqualTo(expectedContract),
                       atIndex(0));
               assertThat(contracts.getTotalRecords()).isEqualTo(1);
@@ -162,7 +162,7 @@ public class IdmConnectContractApiIT {
             .as(Contract.class);
     assertThat(getByIdResult2)
         .usingRecursiveComparison()
-        .ignoringFields("status", "metadata.updatedDate")
+        .ignoringFields("status", "metadata.updatedDate", "version")
         .isEqualTo(postResult);
     assertThat(getByIdResult2.getStatus()).isEqualTo(Status.UPDATED);
 
@@ -196,7 +196,7 @@ public class IdmConnectContractApiIT {
         .hasFieldOrProperty("id")
         .hasFieldOrProperty("metadata")
         .usingRecursiveComparison()
-        .ignoringFields("id", "metadata")
+        .ignoringFields("id", "metadata", "version")
         .isEqualTo(expectedContract);
 
     // PUT invalid contract

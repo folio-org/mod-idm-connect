@@ -37,7 +37,13 @@ resourceTypes:
         exampleItem: !include examples/contract.json
     /{id}:
       put:
-        is: [validate]
+        is: [ validate ]
+        responses:
+          409:
+            description: "Conflict"
+            body:
+              text/plain:
+                example: "Optimistic locking version has changed"
       type:
         collection-item:
           schema: contract

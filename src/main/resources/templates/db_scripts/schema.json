@@ -2,6 +2,8 @@
   "tables": [
     {
       "tableName": "contract",
+      "fromModuleVersion": "mod-idm-connect-1.0.0",
+      "withOptimisticLocking": "failOnConflict",
       "withMetadata": true,
       "likeIndex": [
         {

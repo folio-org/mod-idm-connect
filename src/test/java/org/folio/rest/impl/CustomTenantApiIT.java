@@ -117,7 +117,7 @@ public class CustomTenantApiIT {
               assertThat(contracts.getTotalRecords()).isEqualTo(20);
               assertThat(contracts.getContracts()).hasSize(10);
               assertThat(contracts.getContracts())
-                  .usingRecursiveFieldByFieldElementComparatorIgnoringFields("metadata")
+                  .usingRecursiveFieldByFieldElementComparatorIgnoringFields("metadata", "version")
                   .isSubsetOf(exampleContracts);
             });
   }
