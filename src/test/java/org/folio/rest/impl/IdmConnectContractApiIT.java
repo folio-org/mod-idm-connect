@@ -146,7 +146,7 @@ public class IdmConnectContractApiIT {
     // PUT modified entity
     given()
         .pathParam("id", getByIdResult.getId())
-        .body(getByIdResult.withStatus(Status.UPDATED))
+        .body(getByIdResult.withStatus(Status.DRAFT))
         .put("/{id}")
         .then()
         .statusCode(204);
@@ -164,7 +164,7 @@ public class IdmConnectContractApiIT {
         .usingRecursiveComparison()
         .ignoringFields("status", "metadata.updatedDate", "version")
         .isEqualTo(postResult);
-    assertThat(getByIdResult2.getStatus()).isEqualTo(Status.UPDATED);
+    assertThat(getByIdResult2.getStatus()).isEqualTo(Status.DRAFT);
 
     // DELETE
     given().pathParam("id", getByIdResult.getId()).delete("/{id}").then().statusCode(204);
@@ -180,6 +180,9 @@ public class IdmConnectContractApiIT {
 
     // GET by id
     given().pathParam("id", postResult.getId()).get("/{id}").then().statusCode(404);
+
+    // DELETE by id
+    given().pathParam("id", postResult.getId()).delete("/{id}").then().statusCode(404);
   }
 
   @Test

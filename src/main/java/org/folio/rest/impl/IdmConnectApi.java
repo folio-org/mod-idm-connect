@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.impl.Constants.MSG_IDM_URL_NOT_SET;
 import static org.folio.rest.impl.Constants.TABLE_NAME_CONTRACTS;
 
@@ -26,8 +27,10 @@ import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.jaxrs.model.BulkDeleteRequest;
 import org.folio.rest.jaxrs.model.BulkDeleteResponse;
 import org.folio.rest.jaxrs.model.Contract;
+import org.folio.rest.jaxrs.model.Contract.Status;
 import org.folio.rest.jaxrs.model.Contracts;
 import org.folio.rest.jaxrs.resource.IdmConnect;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 
@@ -88,6 +91,26 @@ public class IdmConnectApi implements IdmConnect {
         asyncResultHandler);
   }
 
+  private Future<DeleteIdmConnectContractByIdResponse> deleteContract(
+      Contract contract, Conn conn) {
+    if (contract == null) {
+      return succeededFuture(
+          DeleteIdmConnectContractByIdResponse.respond404WithTextPlain("Not found"));
+    }
+    if (contract.getStatus().equals(Status.DRAFT)) {
+      return conn.delete(TABLE_NAME_CONTRACTS, contract.getId())
+          .map(
+              rs ->
+                  rs.rowCount() == 0
+                      ? DeleteIdmConnectContractByIdResponse.respond404WithTextPlain("Not found")
+                      : DeleteIdmConnectContractByIdResponse.respond204());
+    } else {
+      return succeededFuture(
+          DeleteIdmConnectContractByIdResponse.respond400WithTextPlain(
+              "Not allowed to delete contract with status != draft."));
+    }
+  }
+
   @Override
   public void deleteIdmConnectContractById(
       String id,
@@ -95,13 +118,18 @@ public class IdmConnectApi implements IdmConnect {
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-    PgUtil.deleteById(
-        TABLE_NAME_CONTRACTS,
-        id,
-        okapiHeaders,
-        vertxContext,
-        DeleteIdmConnectContractByIdResponse.class,
-        asyncResultHandler);
+
+    PgUtil.postgresClient(vertxContext, okapiHeaders)
+        .withTrans(
+            conn ->
+                conn.getByIdForUpdate(TABLE_NAME_CONTRACTS, id, Contract.class)
+                    .flatMap(contract -> deleteContract(contract, conn)))
+        .onSuccess(deleteResponse -> asyncResultHandler.handle(succeededFuture(deleteResponse)))
+        .onFailure(
+            t ->
+                asyncResultHandler.handle(
+                    succeededFuture(
+                        DeleteIdmConnectContractByIdResponse.respond500WithTextPlain(t))));
   }
 
   @Override
@@ -122,9 +150,9 @@ public class IdmConnectApi implements IdmConnect {
                         .transform(
                             ar -> {
                               if (ar.failed() || ar.result().rowCount() == 0) {
-                                return Future.succeededFuture(id);
+                                return succeededFuture(id);
                               } else {
-                                return Future.succeededFuture(null);
+                                return succeededFuture(null);
                               }
                             }))
             .collect(Collectors.toList());
@@ -135,7 +163,7 @@ public class IdmConnectApi implements IdmConnect {
           List<String> failedUUIDs =
               join.<String>list().stream().filter(Objects::nonNull).collect(Collectors.toList());
           asyncResultHandler.handle(
-              Future.succeededFuture(
+              succeededFuture(
                   PostIdmConnectContractBulkDeleteResponse.respond200WithApplicationJson(
                       new BulkDeleteResponse()
                           .withRequested(entity.getUuids().size())
@@ -217,7 +245,7 @@ public class IdmConnectApi implements IdmConnect {
 
     if (idmUrl == null) {
       asyncResultHandler.handle(
-          Future.succeededFuture(
+          succeededFuture(
               GetIdmConnectSearchidmResponse.respond500WithTextPlain(MSG_IDM_URL_NOT_SET)));
       return;
     }
