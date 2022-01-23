@@ -263,4 +263,28 @@ public class IdmConnectContractApiIT {
             })
         .onComplete(context.asyncAssertSuccess());
   }
+
+  @Test
+  public void testThatUpdateWithConflictFails() {
+    // POST a contract
+    Contract version1 =
+        given().body(expectedContract).post().then().statusCode(201).extract().as(Contract.class);
+    final String id = version1.getId();
+
+    // Update contract
+    given()
+        .body(version1.withStatus(Status.UPDATED))
+        .pathParam("id", id)
+        .put("/{id}")
+        .then()
+        .statusCode(204);
+
+    // Update contract with old _version
+    given()
+        .body(version1.withStatus(Status.DRAFT))
+        .pathParam("id", id)
+        .put("/{id}")
+        .then()
+        .statusCode(409);
+  }
 }
