@@ -67,7 +67,7 @@ public class IdmConnectApi implements IdmConnect {
       Context vertxContext) {
     PgUtil.post(
         TABLE_NAME_CONTRACTS,
-        entity,
+        entity.withStatus(Status.DRAFT),
         okapiHeaders,
         vertxContext,
         PostIdmConnectContractResponse.class,
