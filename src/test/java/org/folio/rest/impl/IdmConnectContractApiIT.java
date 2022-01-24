@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.restassured.RestAssured.given;
+import static io.vertx.core.Future.succeededFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Index.atIndex;
 import static org.folio.rest.impl.Constants.BASE_PATH_CONTRACTS;
@@ -11,7 +12,6 @@ import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.parsing.Parser;
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -30,7 +30,6 @@ import org.folio.rest.jaxrs.model.BulkDeleteResponse;
 import org.folio.rest.jaxrs.model.Contract;
 import org.folio.rest.jaxrs.model.Contract.Status;
 import org.folio.rest.jaxrs.model.Contracts;
-import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
@@ -220,10 +219,7 @@ public class IdmConnectContractApiIT {
   @Test
   public void testThatBulkDeleteSucceeds(TestContext context) {
     tenantUtil
-        .setupTenant( // load sample data
-            new TenantAttributes()
-                .withModuleTo(ModuleName.getModuleVersion())
-                .withParameters(List.of(new Parameter().withKey("loadSample").withValue("true"))))
+        .setupTenant(true) // load sample data
         .map(
             v -> {
               List<String> uuids =
@@ -262,7 +258,7 @@ public class IdmConnectContractApiIT {
               uuids.stream()
                   .limit(6)
                   .forEach(id -> given().pathParam("id", id).get("/{id}").then().statusCode(404));
-              return Future.succeededFuture();
+              return succeededFuture();
             })
         .onComplete(context.asyncAssertSuccess());
   }
@@ -289,5 +285,28 @@ public class IdmConnectContractApiIT {
         .put("/{id}")
         .then()
         .statusCode(409);
+  }
+
+  @Test
+  public void testThatDeleteIsOnlyPossibleForDraftStatus(TestContext context) {
+    tenantUtil
+        .setupTenant(true) // load sample data
+        .map(
+            v -> {
+              // draft
+              given().delete("/465ce0b3-10cd-4da2-8848-db85b63a0a32").then().statusCode(204);
+              // updated
+              given().delete("/7f5473c0-e7c3-427c-9202-ba97a1385e50").then().statusCode(400);
+              // pending
+              given().delete("/066e5034-8403-4e51-99db-8378d3239a14").then().statusCode(400);
+              // pending_edit
+              given().delete("/5fd84d19-8c6c-45b8-bd79-69b90b2e35d5").then().statusCode(400);
+              // transmission_error
+              given().delete("/961dad38-bdd2-4886-ab55-392df4ccfe39").then().statusCode(400);
+              // transmission_error_edit
+              given().delete("/d4927c21-1bbb-4be0-905d-8b4fa02ccc42").then().statusCode(400);
+              return succeededFuture();
+            })
+        .onComplete(context.asyncAssertSuccess());
   }
 }
