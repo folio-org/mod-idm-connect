@@ -40,6 +40,10 @@
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema"
+    },
+    "_version": {
+      "description": "Record version for optimistic locking",
+      "type": "integer"
     }
   }
 }
