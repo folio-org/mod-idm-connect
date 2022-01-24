@@ -17,7 +17,7 @@
     },
     "libraryCard": "79254581",
     "uniLogin": "mhb76lxa",
-    "status": "created",
+    "status": "draft",
     "beginDate": "2018-01-12",
     "endDate": "2020-01-12",
     "comment": "A comment."
@@ -39,7 +39,7 @@
     },
     "libraryCard": "69136862",
     "uniLogin": "xbe45xzv",
-    "status": "activated",
+    "status": "updated",
     "beginDate": "2013-03-23",
     "endDate": "2015-03-23",
     "comment": "A comment."
@@ -83,7 +83,7 @@
     },
     "libraryCard": "44492207",
     "uniLogin": "hen14wxw",
-    "status": "activated",
+    "status": "pending_edit",
     "beginDate": "2015-10-07",
     "endDate": "2017-10-07",
     "comment": "A comment."
@@ -105,7 +105,7 @@
     },
     "libraryCard": "71150023",
     "uniLogin": "esw29vlq",
-    "status": "pending",
+    "status": "transmission_error",
     "beginDate": "2010-04-06",
     "endDate": "2012-04-06",
     "comment": "A comment."
@@ -126,7 +126,7 @@
     },
     "libraryCard": "80844141",
     "uniLogin": "zmo17mkt",
-    "status": "created",
+    "status": "transmission_error_edit",
     "beginDate": "2017-11-17",
     "endDate": "2019-11-17",
     "comment": "A comment."
@@ -148,7 +148,7 @@
     },
     "libraryCard": "12778293",
     "uniLogin": "byo87ynr",
-    "status": "created",
+    "status": "draft",
     "beginDate": "2018-07-10",
     "endDate": "2020-07-10",
     "comment": "A comment."
@@ -169,7 +169,7 @@
     },
     "libraryCard": "89468934",
     "uniLogin": "rij11asi",
-    "status": "activated",
+    "status": "updated",
     "beginDate": "2017-01-23",
     "endDate": "2019-01-23",
     "comment": "A comment."
@@ -192,7 +192,7 @@
     },
     "libraryCard": "40917582",
     "uniLogin": "wwh27ybc",
-    "status": "activated",
+    "status": "updated",
     "beginDate": "2018-05-08",
     "endDate": "2020-05-08",
     "comment": "A comment."
@@ -214,7 +214,7 @@
     },
     "libraryCard": "79473551",
     "uniLogin": "fpl05nkx",
-    "status": "conflict",
+    "status": "transmission_error",
     "beginDate": "2014-07-14",
     "endDate": "2016-07-14",
     "comment": "A comment."
@@ -236,7 +236,7 @@
     },
     "libraryCard": "97108192",
     "uniLogin": "aem48jcp",
-    "status": "created",
+    "status": "draft",
     "beginDate": "2017-12-29",
     "endDate": "2019-12-29",
     "comment": "A comment."
@@ -258,7 +258,7 @@
     },
     "libraryCard": "31206008",
     "uniLogin": "slw88khy",
-    "status": "activated",
+    "status": "updated",
     "beginDate": "2018-03-09",
     "endDate": "2020-03-09",
     "comment": "A comment."
@@ -279,7 +279,7 @@
     },
     "libraryCard": "88497352",
     "uniLogin": "xhp39jqp",
-    "status": "created",
+    "status": "draft",
     "beginDate": "2012-06-05",
     "endDate": "2014-06-05",
     "comment": "A comment."
@@ -301,7 +301,7 @@
     },
     "libraryCard": "55301541",
     "uniLogin": "jia03cql",
-    "status": "created",
+    "status": "draft",
     "beginDate": "2010-10-03",
     "endDate": "2012-10-03",
     "comment": "A comment."
@@ -345,7 +345,7 @@
     },
     "libraryCard": "37370837",
     "uniLogin": "eua09wga",
-    "status": "activated",
+    "status": "updated",
     "beginDate": "2018-01-25",
     "endDate": "2020-01-25",
     "comment": "A comment."
@@ -366,7 +366,7 @@
     },
     "libraryCard": "99713293",
     "uniLogin": "eqq92qqk",
-    "status": "conflict",
+    "status": "transmission_error",
     "beginDate": "2018-08-19",
     "endDate": "2020-08-19",
     "comment": "A comment."
@@ -389,7 +389,7 @@
     },
     "libraryCard": "21933791",
     "uniLogin": "dyx87dyo",
-    "status": "created",
+    "status": "draft",
     "beginDate": "2017-03-07",
     "endDate": "2019-03-07",
     "comment": "A comment."
@@ -412,7 +412,7 @@
     },
     "libraryCard": "71538002",
     "uniLogin": "vkt44rdi",
-    "status": "created",
+    "status": "draft",
     "beginDate": "2017-04-25",
     "endDate": "2019-04-25",
     "comment": "A comment."
@@ -434,7 +434,7 @@
     },
     "libraryCard": "35201590",
     "uniLogin": "ycl90hrq",
-    "status": "created",
+    "status": "draft",
     "beginDate": "2019-02-25",
     "endDate": "2021-02-25",
     "comment": "A comment."
