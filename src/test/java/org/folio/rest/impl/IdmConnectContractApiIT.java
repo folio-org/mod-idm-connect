@@ -52,13 +52,15 @@ public class IdmConnectContractApiIT {
   private static final String CONTRACT_JSON = "examplecontract.json";
   private static final Vertx vertx = VertxUtils.getVertxFromContextOrNew();
   private static TenantUtil tenantUtil;
+  private static Contract sampleContract;
   private static Contract expectedContract;
 
   @BeforeClass
   public static void beforeClass(TestContext context) throws IOException {
     String jsonStr =
         Resources.toString(Resources.getResource(CONTRACT_JSON), StandardCharsets.UTF_8);
-    expectedContract = Json.decodeValue(jsonStr, Contract.class);
+    sampleContract = Json.decodeValue(jsonStr, Contract.class);
+    expectedContract = Json.decodeValue(jsonStr, Contract.class).withStatus(Status.DRAFT);
 
     int port = NetworkUtils.nextFreePort();
     RestAssured.reset();
@@ -104,7 +106,7 @@ public class IdmConnectContractApiIT {
   public void testThatWeCanGetPostPutAndDelete() {
     // POST
     Contract postResult =
-        given().body(expectedContract).post().then().statusCode(201).extract().as(Contract.class);
+        given().body(sampleContract).post().then().statusCode(201).extract().as(Contract.class);
     assertThat(postResult)
         .hasFieldOrProperty("id")
         .hasFieldOrProperty("metadata")
@@ -124,6 +126,7 @@ public class IdmConnectContractApiIT {
                           assertThat(actualContract)
                               .hasFieldOrProperty("id")
                               .hasFieldOrProperty("metadata")
+                              .hasFieldOrProperty("version")
                               .usingRecursiveComparison()
                               .ignoringFields("id", "metadata", "version")
                               .isEqualTo(expectedContract),
@@ -193,13 +196,7 @@ public class IdmConnectContractApiIT {
   public void testThatPutWithInvalidContractReturns422() {
     // POST
     Contract postResult =
-        given().body(expectedContract).post().then().statusCode(201).extract().as(Contract.class);
-    assertThat(postResult)
-        .hasFieldOrProperty("id")
-        .hasFieldOrProperty("metadata")
-        .usingRecursiveComparison()
-        .ignoringFields("id", "metadata", "version")
-        .isEqualTo(expectedContract);
+        given().body(sampleContract).post().then().statusCode(201).extract().as(Contract.class);
 
     // PUT invalid contract
     given()
@@ -267,7 +264,7 @@ public class IdmConnectContractApiIT {
   public void testThatUpdateWithConflictFails() {
     // POST a contract
     Contract version1 =
-        given().body(expectedContract).post().then().statusCode(201).extract().as(Contract.class);
+        given().body(sampleContract).post().then().statusCode(201).extract().as(Contract.class);
     final String id = version1.getId();
 
     // Update contract
