@@ -4,7 +4,9 @@ import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import org.folio.rest.client.TenantClient;
+import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.tools.utils.ModuleName;
 
 public class TenantUtil {
 
@@ -57,8 +59,20 @@ public class TenantUtil {
     return Future.failedFuture("deleteTenantByOperationId returned " + response.statusCode());
   }
 
-  public Future<Void> setupTenant(TenantAttributes tenantAttributes) {
+  public Future<Void> setupTenant(TenantAttributes tenantAttributes, boolean loadSample) {
+    if (loadSample) {
+      tenantAttributes.getParameters().add(new Parameter().withKey("loadSample").withValue("true"));
+    }
     return tenantClient.postTenant(tenantAttributes).compose(this::handlePostTenantResponse);
+  }
+
+  public Future<Void> setupTenant(boolean loadSample) {
+    return setupTenant(
+        new TenantAttributes().withModuleTo(ModuleName.getModuleVersion()), loadSample);
+  }
+
+  public Future<Void> setupTenant(TenantAttributes tenantAttributes) {
+    return setupTenant(tenantAttributes, false);
   }
 
   public Future<Void> teardownTenant() {
