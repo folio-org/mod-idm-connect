@@ -2,7 +2,7 @@ package org.folio.rest.impl;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.rest.impl.Constants.BASE_PATH_CONTRACTS;
+import static org.folio.idmconnect.Constants.BASE_PATH_CONTRACTS;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.io.Resources;

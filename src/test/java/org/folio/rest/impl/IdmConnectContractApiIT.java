@@ -4,8 +4,8 @@ import static io.restassured.RestAssured.given;
 import static io.vertx.core.Future.succeededFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Index.atIndex;
-import static org.folio.rest.impl.Constants.BASE_PATH_CONTRACTS;
-import static org.folio.rest.impl.Constants.PATH_BULK_DELETE;
+import static org.folio.idmconnect.Constants.BASE_PATH_CONTRACTS;
+import static org.folio.idmconnect.Constants.PATH_BULK_DELETE;
 
 import com.google.common.io.Resources;
 import io.restassured.RestAssured;

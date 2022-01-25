@@ -1,8 +1,8 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.impl.Constants.MSG_IDM_URL_NOT_SET;
-import static org.folio.rest.impl.Constants.TABLE_NAME_CONTRACTS;
+import static org.folio.idmconnect.Constants.MSG_IDM_URL_NOT_SET;
+import static org.folio.idmconnect.Constants.TABLE_NAME_CONTRACTS;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;

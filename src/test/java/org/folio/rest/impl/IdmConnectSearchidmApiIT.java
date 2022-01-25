@@ -7,8 +7,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.rest.impl.Constants.BASE_PATH_SEARCHIDM;
-import static org.folio.rest.impl.Constants.MSG_IDM_URL_NOT_SET;
+import static org.folio.idmconnect.Constants.BASE_PATH_SEARCHIDM;
+import static org.folio.idmconnect.Constants.MSG_IDM_URL_NOT_SET;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
