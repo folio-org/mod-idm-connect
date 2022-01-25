@@ -306,4 +306,9 @@ public class IdmConnectContractApiIT {
             })
         .onComplete(context.asyncAssertSuccess());
   }
+
+  @Test
+  public void testTransmit() {
+    given().get("/d4927c21-1bbb-4be0-905d-8b4fa02ccc42/transmit").then().statusCode(200);
+  }
 }

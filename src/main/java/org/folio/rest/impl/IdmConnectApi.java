@@ -124,6 +124,16 @@ public class IdmConnectApi implements IdmConnect {
   }
 
   @Override
+  public void getIdmConnectContractTransmitById(
+      String id,
+      Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) {
+    asyncResultHandler.handle(
+        succeededFuture(GetIdmConnectContractTransmitByIdResponse.respond200()));
+  }
+
+  @Override
   public void postIdmConnectContractBulkDelete(
       BulkDeleteRequest entity,
       Map<String, String> okapiHeaders,

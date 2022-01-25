@@ -24,11 +24,11 @@ resourceTypes:
   /contract:
     get:
       is: [
-        searchable: {description: "", example: ""},
-        pageable
+          searchable: { description: "", example: "" },
+          pageable
       ]
     post:
-      is: [validate]
+      is: [ validate ]
     type:
       collection:
         schemaCollection: contracts
@@ -48,6 +48,18 @@ resourceTypes:
         collection-item:
           schema: contract
           exampleItem: !include examples/contract.json
+    /{id}/transmit:
+      description: "Transmit the walk-in contract with id to external IDM system and update its status"
+      get:
+        responses:
+          200:
+            description: "Transmission was successful"
+          400:
+            description: "Transmission was not successful"
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
     /bulk-delete:
       description: Delete multiple walk-in contracts
       post:
