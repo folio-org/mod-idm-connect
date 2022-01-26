@@ -1,6 +1,10 @@
 package org.folio.idmconnect;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
+import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+import static org.folio.idmconnect.Constants.MSG_IDM_CONTRACT_URL_NOT_SET;
 import static org.folio.idmconnect.Constants.MSG_IDM_URL_NOT_SET;
 
 import io.vertx.core.Context;
@@ -11,39 +15,42 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import java.time.DateTimeException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.stream.Stream;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import org.folio.rest.jaxrs.model.Contract;
 
 public class IdmClientImpl implements IdmClient {
 
   private final String IDM_URL;
+  private final String IDM_CONTRACT_URL;
   private final String IDM_TOKEN;
   private final WebClient webClient;
 
   public IdmClientImpl(Context context) {
     IDM_URL = System.getenv("IDM_URL");
+    IDM_CONTRACT_URL = System.getenv("IDM_CONTRACT_URL");
     IDM_TOKEN = System.getenv("IDM_TOKEN");
     webClient = WebClient.create(context.owner());
   }
 
   private String toBasicIsoDate(String dateString) {
     try {
-      return LocalDate.parse(dateString).format(DateTimeFormatter.BASIC_ISO_DATE);
+      return LocalDate.parse(dateString).format(BASIC_ISO_DATE);
     } catch (NullPointerException | DateTimeException e) {
       return dateString;
     }
   }
 
   private Response createResponse(int status, String contentType, Object o) {
-    return Response.status(status).header("Content-Type", contentType).entity(o).build();
+    return Response.status(status).header(CONTENT_TYPE, contentType).entity(o).build();
   }
 
   private Response toResponse(HttpResponse<Buffer> bufferHttpResponse) {
     ResponseBuilder responseBuilder =
         Response.status(bufferHttpResponse.statusCode())
-            .header("Content-Type", bufferHttpResponse.getHeader("Content-Type"))
+            .header(CONTENT_TYPE, bufferHttpResponse.getHeader(CONTENT_TYPE))
             .entity(bufferHttpResponse.bodyAsString());
     return responseBuilder.build();
   }
@@ -75,12 +82,27 @@ public class IdmClientImpl implements IdmClient {
 
   @Override
   public Future<Response> search(String firstName, String lastName, String dateOfBirth) {
-    if (IDM_URL == null) {
-      return succeededFuture(createResponse(500, "text/plain", MSG_IDM_URL_NOT_SET));
-    }
+    return Optional.ofNullable(IDM_URL)
+        .map(
+            url ->
+                createSearchIdmRequest(
+                        webClient, IDM_URL, IDM_TOKEN, firstName, lastName, dateOfBirth)
+                    .send()
+                    .map(this::toResponse))
+        .orElse(succeededFuture(createResponse(500, TEXT_PLAIN, MSG_IDM_URL_NOT_SET)));
+  }
 
-    return createSearchIdmRequest(webClient, IDM_URL, IDM_TOKEN, firstName, lastName, dateOfBirth)
-        .send()
-        .map(this::toResponse);
+  @Override
+  public Future<Response> putContract(Contract contract) {
+    return Optional.ofNullable(IDM_CONTRACT_URL)
+        .map(url -> webClient.putAbs(url).sendJson(contract).map(this::toResponse))
+        .orElse(succeededFuture(createResponse(500, TEXT_PLAIN, MSG_IDM_CONTRACT_URL_NOT_SET)));
+  }
+
+  @Override
+  public Future<Response> postContract(Contract contract) {
+    return Optional.ofNullable(IDM_CONTRACT_URL)
+        .map(url -> webClient.postAbs(url).sendJson(contract).map(this::toResponse))
+        .orElse(succeededFuture(createResponse(500, TEXT_PLAIN, MSG_IDM_CONTRACT_URL_NOT_SET)));
   }
 }
