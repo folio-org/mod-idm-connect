@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.idmconnect.Constants.TABLE_NAME_CONTRACTS;
 
@@ -12,8 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.ws.rs.core.Response;
-import org.folio.idmconnect.IdmClientImpl;
+import org.folio.idmconnect.IdmClient;
+import org.folio.idmconnect.IdmClientFactory;
 import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.jaxrs.model.BulkDeleteRequest;
 import org.folio.rest.jaxrs.model.BulkDeleteResponse;
@@ -82,26 +85,6 @@ public class IdmConnectApi implements IdmConnect {
         asyncResultHandler);
   }
 
-  private Future<DeleteIdmConnectContractByIdResponse> deleteContract(
-      Contract contract, Conn conn) {
-    if (contract == null) {
-      return succeededFuture(
-          DeleteIdmConnectContractByIdResponse.respond404WithTextPlain("Not found"));
-    }
-    if (contract.getStatus().equals(Status.DRAFT)) {
-      return conn.delete(TABLE_NAME_CONTRACTS, contract.getId())
-          .map(
-              rs ->
-                  rs.rowCount() == 0
-                      ? DeleteIdmConnectContractByIdResponse.respond404WithTextPlain("Not found")
-                      : DeleteIdmConnectContractByIdResponse.respond204());
-    } else {
-      return succeededFuture(
-          DeleteIdmConnectContractByIdResponse.respond400WithTextPlain(
-              "Not allowed to delete contract with status != draft."));
-    }
-  }
-
   @Override
   public void deleteIdmConnectContractById(
       String id,
@@ -129,8 +112,33 @@ public class IdmConnectApi implements IdmConnect {
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-    asyncResultHandler.handle(
-        succeededFuture(GetIdmConnectContractTransmitByIdResponse.respond200()));
+    PgUtil.postgresClient(vertxContext, okapiHeaders)
+        .withTrans(
+            conn ->
+                conn.getByIdForUpdate(TABLE_NAME_CONTRACTS, id, Contract.class)
+                    .flatMap(
+                        c ->
+                            transmitContract(c)
+                                .transform(
+                                    ar -> {
+                                      if (ar.succeeded() && ar.result().getStatus() == 200) {
+                                        return updateContractStatus(c, true, conn)
+                                            .transform(
+                                                v ->
+                                                    succeededFuture(
+                                                        GetIdmConnectContractTransmitByIdResponse
+                                                            .respond200()));
+                                      } else {
+                                        return updateContractStatus(c, false, conn)
+                                            .transform(
+                                                v ->
+                                                    succeededFuture(
+                                                        GetIdmConnectContractTransmitByIdResponse
+                                                            .respond400()));
+                                      }
+                                    }))
+                    .otherwise(GetIdmConnectContractTransmitByIdResponse::respond500WithTextPlain)
+                    .onComplete(resp -> asyncResultHandler.handle(succeededFuture(resp.result()))));
   }
 
   @Override
@@ -200,8 +208,68 @@ public class IdmConnectApi implements IdmConnect {
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-    new IdmClientImpl(vertxContext)
+    IdmClientFactory.create()
         .search(firstname, lastname, dateOfBirth)
         .onComplete(asyncResultHandler);
+  }
+
+  private Future<DeleteIdmConnectContractByIdResponse> deleteContract(
+      Contract contract, Conn conn) {
+    if (contract == null) {
+      return succeededFuture(
+          DeleteIdmConnectContractByIdResponse.respond404WithTextPlain("Not found"));
+    }
+    if (contract.getStatus().equals(Status.DRAFT)) {
+      return conn.delete(TABLE_NAME_CONTRACTS, contract.getId())
+          .map(
+              rs ->
+                  rs.rowCount() == 0
+                      ? DeleteIdmConnectContractByIdResponse.respond404WithTextPlain("Not found")
+                      : DeleteIdmConnectContractByIdResponse.respond204());
+    } else {
+      return succeededFuture(
+          DeleteIdmConnectContractByIdResponse.respond400WithTextPlain(
+              "Not allowed to delete contract with status != draft."));
+    }
+  }
+
+  private Future<Response> transmitContract(Contract contract) {
+    if (contract.getStatus() == null) {
+      contract.setStatus(Status.DRAFT);
+    }
+    IdmClient idmClient = IdmClientFactory.create();
+    if (Stream.of(Status.DRAFT, Status.TRANSMISSION_ERROR)
+        .anyMatch(status -> contract.getStatus().equals(status))) {
+      return idmClient.postContract(contract);
+    } else {
+      return idmClient.putContract(contract);
+    }
+  }
+
+  private Future<Void> updateContractStatus(Contract contract, boolean succeeded, Conn conn) {
+    if (contract.getStatus() == null) {
+      contract.setStatus(Status.DRAFT);
+    }
+    if (succeeded) {
+      if (Stream.of(Status.DRAFT, Status.TRANSMISSION_ERROR)
+          .anyMatch(status -> contract.getStatus().equals(status))) {
+        contract.setStatus(Status.PENDING);
+      } else {
+        contract.setStatus(Status.PENDING_EDIT);
+      }
+    } else {
+      if (Stream.of(Status.DRAFT, Status.TRANSMISSION_ERROR)
+          .anyMatch(status -> contract.getStatus().equals(status))) {
+        contract.setStatus(Status.TRANSMISSION_ERROR);
+      } else {
+        contract.setStatus(Status.TRANSMISSION_ERROR_EDIT);
+      }
+    }
+    return conn.update(TABLE_NAME_CONTRACTS, contract, contract.getId())
+        .flatMap(
+            rs ->
+                (rs.rowCount() == 1
+                    ? succeededFuture()
+                    : failedFuture("Updating status of " + contract.getId() + " failed")));
   }
 }

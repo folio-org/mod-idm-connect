@@ -31,6 +31,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.tools.utils.VertxUtils;
+import org.folio.utils.TenantUtil;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

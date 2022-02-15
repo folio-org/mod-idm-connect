@@ -36,6 +36,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.tools.utils.VertxUtils;
+import org.folio.utils.TenantUtil;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -305,10 +306,5 @@ public class IdmConnectContractApiIT {
               return succeededFuture();
             })
         .onComplete(context.asyncAssertSuccess());
-  }
-
-  @Test
-  public void testTransmit() {
-    given().get("/d4927c21-1bbb-4be0-905d-8b4fa02ccc42/transmit").then().statusCode(200);
   }
 }

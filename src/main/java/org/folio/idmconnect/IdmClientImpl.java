@@ -7,7 +7,6 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.folio.idmconnect.Constants.MSG_IDM_CONTRACT_URL_NOT_SET;
 import static org.folio.idmconnect.Constants.MSG_IDM_URL_NOT_SET;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpRequest;
@@ -20,6 +19,7 @@ import java.util.stream.Stream;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import org.folio.rest.jaxrs.model.Contract;
+import org.folio.rest.tools.utils.VertxUtils;
 
 public class IdmClientImpl implements IdmClient {
 
@@ -28,11 +28,11 @@ public class IdmClientImpl implements IdmClient {
   private final String IDM_TOKEN;
   private final WebClient webClient;
 
-  public IdmClientImpl(Context context) {
+  public IdmClientImpl() {
     IDM_URL = System.getenv("IDM_URL");
     IDM_CONTRACT_URL = System.getenv("IDM_CONTRACT_URL");
     IDM_TOKEN = System.getenv("IDM_TOKEN");
-    webClient = WebClient.create(context.owner());
+    webClient = WebClient.create(VertxUtils.getVertxFromContextOrNew());
   }
 
   private String toBasicIsoDate(String dateString) {
