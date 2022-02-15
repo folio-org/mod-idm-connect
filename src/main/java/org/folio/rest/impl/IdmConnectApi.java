@@ -121,20 +121,21 @@ public class IdmConnectApi implements IdmConnect {
                             transmitContract(c)
                                 .transform(
                                     ar -> {
-                                      if (ar.succeeded() && ar.result().getStatus() == 200) {
-                                        return updateContractStatus(c, true, conn)
+                                      if (ar.succeeded()) {
+                                        return updateContractStatus(
+                                                c, ar.result().getStatus() == 200, conn)
                                             .transform(
                                                 v ->
                                                     succeededFuture(
-                                                        GetIdmConnectContractTransmitByIdResponse
-                                                            .respond200()));
+                                                        Response.fromResponse(ar.result())
+                                                            .build()));
                                       } else {
                                         return updateContractStatus(c, false, conn)
                                             .transform(
                                                 v ->
                                                     succeededFuture(
                                                         GetIdmConnectContractTransmitByIdResponse
-                                                            .respond400()));
+                                                            .respond500WithTextPlain(ar.cause())));
                                       }
                                     }))
                     .otherwise(GetIdmConnectContractTransmitByIdResponse::respond500WithTextPlain)

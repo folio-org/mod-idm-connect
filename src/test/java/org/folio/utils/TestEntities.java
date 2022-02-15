@@ -46,14 +46,6 @@ public enum TestEntities {
   private final Status failedStatus;
   private final Status succeededStatus;
 
-  public static int getSucceededStatusCode() {
-    return 200;
-  }
-
-  public static int getFailedStatusCode() {
-    return 400;
-  }
-
   public Status getInitialStatus() {
     return initialStatus;
   }

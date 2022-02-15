@@ -23,8 +23,6 @@ import static org.folio.utils.TestEntities.PENDING_EDIT;
 import static org.folio.utils.TestEntities.TRANSMISSION_ERROR;
 import static org.folio.utils.TestEntities.TRANSMISSION_ERROR_EDIT;
 import static org.folio.utils.TestEntities.UPDATED;
-import static org.folio.utils.TestEntities.getFailedStatusCode;
-import static org.folio.utils.TestEntities.getSucceededStatusCode;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
@@ -80,8 +78,6 @@ public class IdmConnectContractApiTransmitIT {
         new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
 
     vertx.deployVerticle(RestVerticle.class.getName(), options, context.asyncAssertSuccess());
-
-    envs.set(ENVVAR_IDM_CONTRACT_URL, idmApiMock.baseUrl());
   }
 
   @AfterClass
@@ -93,6 +89,7 @@ public class IdmConnectContractApiTransmitIT {
   public void setUp(TestContext context) {
     tenantUtil.setupTenant(true).onComplete(context.asyncAssertSuccess());
     idmApiMock.resetAll();
+    envs.set(ENVVAR_IDM_CONTRACT_URL, idmApiMock.baseUrl());
   }
 
   @After
@@ -102,34 +99,34 @@ public class IdmConnectContractApiTransmitIT {
 
   @Test
   public void testStatusUpdateOnSuccessfulTransmit() {
-    stubFor(put(urlEqualTo("/")).willReturn(aResponse().withStatus(200)));
-    stubFor(post(urlEqualTo("/")).willReturn(aResponse().withStatus(200)));
+    int expectedStatusCode = 200;
+    stubFor(put(urlEqualTo("/")).willReturn(aResponse().withStatus(expectedStatusCode)));
+    stubFor(post(urlEqualTo("/")).willReturn(aResponse().withStatus(expectedStatusCode)));
     RequestPatternBuilder postRequestedFor = postRequestedFor(urlEqualTo("/"));
     RequestPatternBuilder putRequestedFor = putRequestedFor(urlEqualTo("/"));
-    int succeededStatusCode = getSucceededStatusCode();
 
     // draft
-    given().get(PATH_TRANSMIT, DRAFT.getId()).then().statusCode(succeededStatusCode);
+    given().get(PATH_TRANSMIT, DRAFT.getId()).then().statusCode(expectedStatusCode);
     verify(1, postRequestedFor);
     assertThat(given().get(PATH_ID, DRAFT.getId()).as(Contract.class).getStatus())
         .isEqualTo(DRAFT.getSucceededStatus());
     // updated
-    given().get(PATH_TRANSMIT, UPDATED.getId()).then().statusCode(succeededStatusCode);
+    given().get(PATH_TRANSMIT, UPDATED.getId()).then().statusCode(expectedStatusCode);
     verify(1, putRequestedFor);
     assertThat(given().get(PATH_ID, UPDATED.getId()).as(Contract.class).getStatus())
         .isEqualTo(UPDATED.getSucceededStatus());
     // pending
-    given().get(PATH_TRANSMIT, PENDING.getId()).then().statusCode(succeededStatusCode);
+    given().get(PATH_TRANSMIT, PENDING.getId()).then().statusCode(expectedStatusCode);
     verify(2, putRequestedFor);
     assertThat(given().get(PATH_ID, PENDING.getId()).as(Contract.class).getStatus())
         .isEqualTo(PENDING.getSucceededStatus());
     // pending_edit
-    given().get(PATH_TRANSMIT, PENDING_EDIT.getId()).then().statusCode(succeededStatusCode);
+    given().get(PATH_TRANSMIT, PENDING_EDIT.getId()).then().statusCode(expectedStatusCode);
     verify(3, putRequestedFor);
     assertThat(given().get(PATH_ID, PENDING_EDIT.getId()).as(Contract.class).getStatus())
         .isEqualTo(PENDING_EDIT.getSucceededStatus());
     // transmission_error
-    given().get(PATH_TRANSMIT, TRANSMISSION_ERROR.getId()).then().statusCode(succeededStatusCode);
+    given().get(PATH_TRANSMIT, TRANSMISSION_ERROR.getId()).then().statusCode(expectedStatusCode);
     verify(2, postRequestedFor);
     assertThat(given().get(PATH_ID, TRANSMISSION_ERROR.getId()).as(Contract.class).getStatus())
         .isEqualTo(TRANSMISSION_ERROR.getSucceededStatus());
@@ -137,61 +134,77 @@ public class IdmConnectContractApiTransmitIT {
     given()
         .get(PATH_TRANSMIT, TRANSMISSION_ERROR_EDIT.getId())
         .then()
-        .statusCode(succeededStatusCode);
+        .statusCode(expectedStatusCode);
     verify(4, putRequestedFor);
     assertThat(given().get(PATH_ID, TRANSMISSION_ERROR_EDIT.getId()).as(Contract.class).getStatus())
         .isEqualTo(TRANSMISSION_ERROR_EDIT.getSucceededStatus());
   }
 
-  private void assertSampleDataOnFailedTransmit() {
+  private void assertSampleDataOnFailedTransmit(int expectedStatusCode) {
     RequestPatternBuilder postRequestedFor = postRequestedFor(urlEqualTo("/"));
     RequestPatternBuilder putRequestedFor = putRequestedFor(urlEqualTo("/"));
-    int failedStatusCode = getFailedStatusCode();
 
     // draft
-    given().get(PATH_TRANSMIT, DRAFT.getId()).then().statusCode(failedStatusCode);
+    given().get(PATH_TRANSMIT, DRAFT.getId()).then().statusCode(expectedStatusCode);
     verify(1, postRequestedFor);
     assertThat(given().get(PATH_ID, DRAFT.getId()).as(Contract.class).getStatus())
         .isEqualTo(DRAFT.getFailedStatus());
     // updated
-    given().get(PATH_TRANSMIT, UPDATED.getId()).then().statusCode(failedStatusCode);
+    given().get(PATH_TRANSMIT, UPDATED.getId()).then().statusCode(expectedStatusCode);
     verify(1, putRequestedFor);
     assertThat(given().get(PATH_ID, UPDATED.getId()).as(Contract.class).getStatus())
         .isEqualTo(UPDATED.getFailedStatus());
     // pending
-    given().get(PATH_TRANSMIT, PENDING.getId()).then().statusCode(failedStatusCode);
+    given().get(PATH_TRANSMIT, PENDING.getId()).then().statusCode(expectedStatusCode);
     verify(2, putRequestedFor);
     assertThat(given().get(PATH_ID, PENDING.getId()).as(Contract.class).getStatus())
         .isEqualTo(PENDING.getFailedStatus());
     // pending_edit
-    given().get(PATH_TRANSMIT, PENDING_EDIT.getId()).then().statusCode(failedStatusCode);
+    given().get(PATH_TRANSMIT, PENDING_EDIT.getId()).then().statusCode(expectedStatusCode);
     verify(3, putRequestedFor);
     assertThat(given().get(PATH_ID, PENDING_EDIT.getId()).as(Contract.class).getStatus())
         .isEqualTo(PENDING_EDIT.getFailedStatus());
     // transmission_error
-    given().get(PATH_TRANSMIT, TRANSMISSION_ERROR.getId()).then().statusCode(failedStatusCode);
+    given().get(PATH_TRANSMIT, TRANSMISSION_ERROR.getId()).then().statusCode(expectedStatusCode);
     verify(2, postRequestedFor);
     assertThat(given().get(PATH_ID, TRANSMISSION_ERROR.getId()).as(Contract.class).getStatus())
         .isEqualTo(TRANSMISSION_ERROR.getFailedStatus());
     // transmission_error_edit
-    given().get(PATH_TRANSMIT, TRANSMISSION_ERROR_EDIT.getId()).then().statusCode(failedStatusCode);
+    given()
+        .get(PATH_TRANSMIT, TRANSMISSION_ERROR_EDIT.getId())
+        .then()
+        .statusCode(expectedStatusCode);
     verify(4, putRequestedFor);
     assertThat(given().get(PATH_ID, TRANSMISSION_ERROR_EDIT.getId()).as(Contract.class).getStatus())
         .isEqualTo(TRANSMISSION_ERROR_EDIT.getFailedStatus());
   }
 
   @Test
-  public void testStatusUpdateOnFailedTransmit() {
+  public void testStatusUpdateOnFailedTransmit404() {
     stubFor(put(urlEqualTo("/")).willReturn(aResponse().withStatus(404)));
     stubFor(post(urlEqualTo("/")).willReturn(aResponse().withStatus(404)));
-    assertSampleDataOnFailedTransmit();
+    assertSampleDataOnFailedTransmit(404);
   }
 
   @Test
-  public void testStatusUpdateOnFailedTransmit2() {
+  public void testStatusUpdateOnFailedTransmit500() {
     stubFor(put(urlEqualTo("/")).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)));
     stubFor(
         post(urlEqualTo("/")).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)));
-    assertSampleDataOnFailedTransmit();
+    assertSampleDataOnFailedTransmit(500);
+  }
+
+  @Test
+  public void testStatusUpdateOnFailedTransmitNoEnvVar() {
+    envs.set(ENVVAR_IDM_CONTRACT_URL, null);
+    assertThat(System.getenv(ENVVAR_IDM_CONTRACT_URL)).isNull();
+    int expectedStatusCode = 500;
+
+    given().get(PATH_TRANSMIT, DRAFT.getId()).then().statusCode(expectedStatusCode);
+    assertThat(given().get(PATH_ID, DRAFT.getId()).as(Contract.class).getStatus())
+        .isEqualTo(DRAFT.getFailedStatus());
+    given().get(PATH_TRANSMIT, UPDATED.getId()).then().statusCode(expectedStatusCode);
+    assertThat(given().get(PATH_ID, UPDATED.getId()).as(Contract.class).getStatus())
+        .isEqualTo(UPDATED.getFailedStatus());
   }
 }
