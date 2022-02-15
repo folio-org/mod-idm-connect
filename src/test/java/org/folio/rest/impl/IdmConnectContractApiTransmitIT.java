@@ -9,10 +9,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static io.restassured.RestAssured.given;
-import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.idmconnect.Constants.BASE_PATH_CONTRACTS;
+import static org.folio.idmconnect.Constants.ENVVAR_IDM_CONTRACT_URL;
+import static org.folio.utils.TestConstants.HOST;
+import static org.folio.utils.TestConstants.IDM_TOKEN;
+import static org.folio.utils.TestConstants.PATH_ID;
+import static org.folio.utils.TestConstants.PATH_TRANSMIT;
+import static org.folio.utils.TestConstants.TENANT;
+import static org.folio.utils.TestConstants.setupRestAssured;
 import static org.folio.utils.TestEntities.DRAFT;
 import static org.folio.utils.TestEntities.PENDING;
 import static org.folio.utils.TestEntities.PENDING_EDIT;
@@ -27,16 +31,12 @@ import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import io.restassured.RestAssured;
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.parsing.Parser;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
-import java.util.Map;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
@@ -57,12 +57,7 @@ import uk.org.webcompere.systemstubs.rules.EnvironmentVariablesRule;
 @RunWith(VertxUnitRunner.class)
 public class IdmConnectContractApiTransmitIT {
 
-  private static final String HOST = "http://localhost";
-  private static final String TENANT = "diku";
-  private static final Map<String, String> OKAPI_HEADERS = Map.of(XOkapiHeaders.TENANT, TENANT);
   private static final Vertx vertx = VertxUtils.getVertxFromContextOrNew();
-  private static final String PATH_TRANSMIT = "/{id}/transmit";
-  private static final String PATH_ID = "/{id}";
   private static TenantUtil tenantUtil;
 
   @ClassRule public static EnvironmentVariablesRule envs = new EnvironmentVariablesRule();
@@ -74,20 +69,11 @@ public class IdmConnectContractApiTransmitIT {
   @BeforeClass
   public static void beforeClass(TestContext context) {
     int port = NetworkUtils.nextFreePort();
-    RestAssured.reset();
-    RestAssured.baseURI = HOST;
-    RestAssured.port = port;
-    RestAssured.defaultParser = Parser.JSON;
-    RestAssured.requestSpecification =
-        new RequestSpecBuilder()
-            .setBasePath(BASE_PATH_CONTRACTS)
-            .addHeaders(OKAPI_HEADERS)
-            .addHeader(CONTENT_TYPE, APPLICATION_JSON)
-            .build();
+    setupRestAssured(port);
 
     tenantUtil =
         new TenantUtil(
-            new TenantClient(HOST + ":" + port, TENANT, "someToken", WebClient.create(vertx)));
+            new TenantClient(HOST + ":" + port, TENANT, IDM_TOKEN, WebClient.create(vertx)));
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
     DeploymentOptions options =
@@ -95,7 +81,7 @@ public class IdmConnectContractApiTransmitIT {
 
     vertx.deployVerticle(RestVerticle.class.getName(), options, context.asyncAssertSuccess());
 
-    envs.set("IDM_CONTRACT_URL", idmApiMock.baseUrl());
+    envs.set(ENVVAR_IDM_CONTRACT_URL, idmApiMock.baseUrl());
   }
 
   @AfterClass

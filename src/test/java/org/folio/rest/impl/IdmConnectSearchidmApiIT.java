@@ -6,15 +6,18 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.restassured.RestAssured.given;
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.idmconnect.Constants.BASE_PATH_SEARCHIDM;
+import static org.folio.idmconnect.Constants.ENVVAR_IDM_TOKEN;
+import static org.folio.idmconnect.Constants.ENVVAR_IDM_URL;
 import static org.folio.idmconnect.Constants.MSG_IDM_URL_NOT_SET;
+import static org.folio.utils.TestConstants.IDM_TOKEN;
+import static org.folio.utils.TestConstants.setupRestAssured;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.restassured.RestAssured;
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.parsing.Parser;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -35,31 +38,19 @@ import uk.org.webcompere.systemstubs.rules.EnvironmentVariablesRule;
 @RunWith(VertxUnitRunner.class)
 public class IdmConnectSearchidmApiIT {
 
+  private static final Vertx vertx = VertxUtils.getVertxFromContextOrNew();
+  private static String IDM_MOCK_URL;
+
   @ClassRule
   public static WireMockRule idmApiMock =
       new WireMockRule(new WireMockConfiguration().dynamicPort());
 
   @Rule public EnvironmentVariablesRule envs = new EnvironmentVariablesRule();
 
-  private static final String HOST = "http://localhost";
-  private static final String TENANT = "diku";
-  private static final Map<String, String> OKAPI_HEADERS = Map.of("x-okapi-tenant", TENANT);
-  private static final Vertx vertx = VertxUtils.getVertxFromContextOrNew();
-  private static final String IDM_TOKEN = "someToken";
-  private static String IDM_MOCK_URL;
-
   @BeforeClass
   public static void beforeClass(TestContext context) {
     int port = NetworkUtils.nextFreePort();
-    RestAssured.reset();
-    RestAssured.defaultParser = Parser.JSON;
-    RestAssured.requestSpecification =
-        new RequestSpecBuilder()
-            .setBaseUri(HOST)
-            .setPort(port)
-            .setBasePath(BASE_PATH_SEARCHIDM)
-            .addHeaders(OKAPI_HEADERS)
-            .build();
+    setupRestAssured(port, BASE_PATH_SEARCHIDM);
 
     DeploymentOptions options =
         new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
@@ -88,7 +79,7 @@ public class IdmConnectSearchidmApiIT {
                     .withBody("[]")));
     idmApiMock.stubFor(
         get(urlPathEqualTo(BASE_PATH_SEARCHIDM))
-            .withHeader("Authorization", absent())
+            .withHeader(AUTHORIZATION, absent())
             .willReturn(aResponse().withStatus(401)));
   }
 
@@ -99,36 +90,36 @@ public class IdmConnectSearchidmApiIT {
 
   @Test
   public void testMissingUrl() {
-    assertThat(System.getenv("IDM_URL")).isNull();
+    assertThat(System.getenv(ENVVAR_IDM_URL)).isNull();
     assertThat(given().get().then().statusCode(500).extract().body().asString())
         .isEqualTo(MSG_IDM_URL_NOT_SET);
   }
 
   @Test
   public void testInvalidUrl() {
-    envs.set("IDM_URL", "");
-    assertThat(System.getenv("IDM_URL")).isNotNull();
+    envs.set(ENVVAR_IDM_URL, "");
+    assertThat(System.getenv(ENVVAR_IDM_URL)).isNotNull();
     given().get().then().statusCode(400);
   }
 
   @Test
   public void testMissingToken() {
-    envs.set("IDM_URL", IDM_MOCK_URL);
-    assertThat(System.getenv("IDM_TOKEN")).isNull();
+    envs.set(ENVVAR_IDM_URL, IDM_MOCK_URL);
+    assertThat(System.getenv(ENVVAR_IDM_TOKEN)).isNull();
     given().get().then().statusCode(401);
   }
 
   @Test
   public void testMissingQueryParameters() {
-    envs.set("IDM_URL", IDM_MOCK_URL);
-    envs.set("IDM_TOKEN", IDM_TOKEN);
+    envs.set(ENVVAR_IDM_URL, IDM_MOCK_URL);
+    envs.set(ENVVAR_IDM_TOKEN, IDM_TOKEN);
     given().get().then().statusCode(400);
   }
 
   @Test
   public void testRequestOk() {
-    envs.set("IDM_URL", IDM_MOCK_URL);
-    envs.set("IDM_TOKEN", IDM_TOKEN);
+    envs.set(ENVVAR_IDM_URL, IDM_MOCK_URL);
+    envs.set(ENVVAR_IDM_TOKEN, IDM_TOKEN);
     assertThat(
             given()
                 .queryParams(

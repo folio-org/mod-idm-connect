@@ -2,8 +2,12 @@ package org.folio.idmconnect;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+import static org.folio.idmconnect.Constants.ENVVAR_IDM_CONTRACT_URL;
+import static org.folio.idmconnect.Constants.ENVVAR_IDM_TOKEN;
+import static org.folio.idmconnect.Constants.ENVVAR_IDM_URL;
 import static org.folio.idmconnect.Constants.MSG_IDM_CONTRACT_URL_NOT_SET;
 import static org.folio.idmconnect.Constants.MSG_IDM_URL_NOT_SET;
 
@@ -29,9 +33,9 @@ public class IdmClientImpl implements IdmClient {
   private final WebClient webClient;
 
   public IdmClientImpl() {
-    IDM_URL = System.getenv("IDM_URL");
-    IDM_CONTRACT_URL = System.getenv("IDM_CONTRACT_URL");
-    IDM_TOKEN = System.getenv("IDM_TOKEN");
+    IDM_URL = System.getenv(ENVVAR_IDM_URL);
+    IDM_CONTRACT_URL = System.getenv(ENVVAR_IDM_CONTRACT_URL);
+    IDM_TOKEN = System.getenv(ENVVAR_IDM_TOKEN);
     webClient = WebClient.create(VertxUtils.getVertxFromContextOrNew());
   }
 
@@ -64,7 +68,7 @@ public class IdmClientImpl implements IdmClient {
       String dateOfBirth) {
     HttpRequest<Buffer> bufferHttpRequest = webClient.getAbs(idmUrl);
     if (idmToken != null) {
-      bufferHttpRequest.putHeader("Authorization", idmToken);
+      bufferHttpRequest.putHeader(AUTHORIZATION, idmToken);
     }
 
     Stream.of(
