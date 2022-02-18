@@ -65,6 +65,15 @@
           "methods": [
             "GET"
           ],
+          "pathPattern": "/idm-connect/contract/{id}/transmit",
+          "permissionsRequired": [
+            "idmconnect.contract.transmit.get"
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
           "pathPattern": "/idm-connect/searchidm",
           "permissionsRequired": [
             "idmconnect.searchidm.get"
@@ -115,6 +124,11 @@
       "description": "Delete contracts"
     },
     {
+      "permissionName": "idmconnect.contract.transmit.get",
+      "displayName": "idmconnect contract transmit get",
+      "description": "Transmit contract to IDM"
+    },
+    {
       "permissionName": "idmconnect.contract.bulk-delete",
       "displayName": "idmconnect contract bulk-delete",
       "description": "Delete multiple contracts in bulk"
@@ -133,7 +147,8 @@
         "idmconnect.contract.post",
         "idmconnect.contract.put",
         "idmconnect.contract.delete",
-        "idmconnect.contract.bulk-delete"
+        "idmconnect.contract.bulk-delete",
+        "idmconnect.contract.transmit.get"
       ]
     },
     {

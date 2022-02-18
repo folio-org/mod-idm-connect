@@ -1,4 +1,4 @@
-package org.folio.rest.impl;
+package org.folio.utils;
 
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;

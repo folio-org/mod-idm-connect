@@ -4,13 +4,20 @@ import static io.restassured.RestAssured.given;
 import static io.vertx.core.Future.succeededFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Index.atIndex;
-import static org.folio.rest.impl.Constants.BASE_PATH_CONTRACTS;
-import static org.folio.rest.impl.Constants.PATH_BULK_DELETE;
+import static org.folio.idmconnect.Constants.PATH_BULK_DELETE;
+import static org.folio.utils.TestConstants.HOST;
+import static org.folio.utils.TestConstants.IDM_TOKEN;
+import static org.folio.utils.TestConstants.PATH_ID;
+import static org.folio.utils.TestConstants.TENANT;
+import static org.folio.utils.TestConstants.setupRestAssured;
+import static org.folio.utils.TestEntities.DRAFT;
+import static org.folio.utils.TestEntities.PENDING;
+import static org.folio.utils.TestEntities.TRANSMISSION_ERROR;
+import static org.folio.utils.TestEntities.TRANSMISSION_ERROR_EDIT;
+import static org.folio.utils.TestEntities.UPDATED;
 
 import com.google.common.io.Resources;
 import io.restassured.RestAssured;
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.parsing.Parser;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
@@ -21,7 +28,6 @@ import io.vertx.ext.web.client.WebClient;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
@@ -36,6 +42,8 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.tools.utils.VertxUtils;
+import org.folio.utils.TenantUtil;
+import org.folio.utils.TestEntities;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -46,9 +54,6 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class IdmConnectContractApiIT {
 
-  private static final String HOST = "http://localhost";
-  private static final String TENANT = "diku";
-  private static final Map<String, String> OKAPI_HEADERS = Map.of("x-okapi-tenant", TENANT);
   private static final String CONTRACT_JSON = "examplecontract.json";
   private static final Vertx vertx = VertxUtils.getVertxFromContextOrNew();
   private static TenantUtil tenantUtil;
@@ -63,20 +68,11 @@ public class IdmConnectContractApiIT {
     expectedContract = Json.decodeValue(jsonStr, Contract.class).withStatus(Status.DRAFT);
 
     int port = NetworkUtils.nextFreePort();
-    RestAssured.reset();
-    RestAssured.baseURI = HOST;
-    RestAssured.port = port;
-    RestAssured.defaultParser = Parser.JSON;
-    RestAssured.requestSpecification =
-        new RequestSpecBuilder()
-            .setBasePath(BASE_PATH_CONTRACTS)
-            .addHeaders(OKAPI_HEADERS)
-            .addHeader("Content-Type", "application/json")
-            .build();
+    setupRestAssured(port);
 
     tenantUtil =
         new TenantUtil(
-            new TenantClient(HOST + ":" + port, TENANT, "someToken", WebClient.create(vertx)));
+            new TenantClient(HOST + ":" + port, TENANT, IDM_TOKEN, WebClient.create(vertx)));
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
     DeploymentOptions options =
@@ -137,8 +133,7 @@ public class IdmConnectContractApiIT {
     // GET by id
     Contract getByIdResult =
         given()
-            .pathParam("id", postResult.getId())
-            .get("/{id}")
+            .get(PATH_ID, postResult.getId())
             .then()
             .statusCode(200)
             .extract()
@@ -147,17 +142,15 @@ public class IdmConnectContractApiIT {
 
     // PUT modified entity
     given()
-        .pathParam("id", getByIdResult.getId())
         .body(getByIdResult.withStatus(Status.DRAFT))
-        .put("/{id}")
+        .put(PATH_ID, getByIdResult.getId())
         .then()
         .statusCode(204);
 
     // GET by id
     Contract getByIdResult2 =
         given()
-            .pathParam("id", postResult.getId())
-            .get("/{id}")
+            .get(PATH_ID, postResult.getId())
             .then()
             .statusCode(200)
             .extract()
@@ -169,7 +162,7 @@ public class IdmConnectContractApiIT {
     assertThat(getByIdResult2.getStatus()).isEqualTo(Status.DRAFT);
 
     // DELETE
-    given().pathParam("id", getByIdResult.getId()).delete("/{id}").then().statusCode(204);
+    given().delete(PATH_ID, getByIdResult.getId()).then().statusCode(204);
 
     // GET
     Contracts getResult2 = given().get().then().statusCode(200).extract().as(Contracts.class);
@@ -181,10 +174,10 @@ public class IdmConnectContractApiIT {
             });
 
     // GET by id
-    given().pathParam("id", postResult.getId()).get("/{id}").then().statusCode(404);
+    given().get(PATH_ID, postResult.getId()).then().statusCode(404);
 
     // DELETE by id
-    given().pathParam("id", postResult.getId()).delete("/{id}").then().statusCode(404);
+    given().delete(PATH_ID, postResult.getId()).then().statusCode(404);
   }
 
   @Test
@@ -200,9 +193,8 @@ public class IdmConnectContractApiIT {
 
     // PUT invalid contract
     given()
-        .pathParam("id", postResult.getId())
         .body(postResult.withPersonal(new Personal()))
-        .put("/{id}")
+        .put(PATH_ID, postResult.getId())
         .then()
         .statusCode(422);
   }
@@ -219,19 +211,21 @@ public class IdmConnectContractApiIT {
         .setupTenant(true) // load sample data
         .map(
             v -> {
+              String NON_EXISTING_ID = "d4ef9cd7-e57c-4708-bf5a-fba64f622e82";
+              String INVALID_ID = "'5c551294-e387-4de2-92d2-5cfe4fa8788d'";
               List<String> uuids =
                   List.of(
-                      "465ce0b3-10cd-4da2-8848-db85b63a0a32",
-                      "7f5473c0-e7c3-427c-9202-ba97a1385e50",
-                      "8c08a4ee-e8ce-4fb2-823a-05393c429ee8",
-                      "a11f000b-6dd7-48d9-b685-2e934a497047",
-                      "6b842509-7ddf-4d43-b53a-c97443aa8bb5",
-                      "d4ef9cd7-e57c-4708-bf5a-fba64f622e82", // not present in sample data
-                      "'5c551294-e387-4de2-92d2-5cfe4fa8788d'" // invalid UUID
+                      DRAFT.getId(),
+                      UPDATED.getId(),
+                      TRANSMISSION_ERROR.getId(),
+                      TRANSMISSION_ERROR_EDIT.getId(),
+                      PENDING.getId(),
+                      NON_EXISTING_ID, // not present in sample data
+                      INVALID_ID // invalid UUID
                       );
               uuids.stream()
                   .limit(5)
-                  .forEach(id -> given().pathParam("id", id).get("/{id}").then().statusCode(200));
+                  .forEach(id -> given().get(PATH_ID, id).then().statusCode(200));
 
               assertThat(
                       given()
@@ -247,14 +241,12 @@ public class IdmConnectContractApiIT {
                         assertThat(resp.getDeleted()).isEqualTo(5);
                         assertThat(resp.getFailed()).isEqualTo(2);
                         assertThat(resp.getFailedItems())
-                            .containsExactlyInAnyOrder(
-                                "d4ef9cd7-e57c-4708-bf5a-fba64f622e82",
-                                "'5c551294-e387-4de2-92d2-5cfe4fa8788d'");
+                            .containsExactlyInAnyOrder(NON_EXISTING_ID, INVALID_ID);
                       });
 
               uuids.stream()
                   .limit(6)
-                  .forEach(id -> given().pathParam("id", id).get("/{id}").then().statusCode(404));
+                  .forEach(id -> given().get(PATH_ID, id).then().statusCode(404));
               return succeededFuture();
             })
         .onComplete(context.asyncAssertSuccess());
@@ -268,20 +260,10 @@ public class IdmConnectContractApiIT {
     final String id = version1.getId();
 
     // Update contract
-    given()
-        .body(version1.withStatus(Status.UPDATED))
-        .pathParam("id", id)
-        .put("/{id}")
-        .then()
-        .statusCode(204);
+    given().body(version1.withStatus(Status.UPDATED)).put(PATH_ID, id).then().statusCode(204);
 
     // Update contract with old _version
-    given()
-        .body(version1.withStatus(Status.DRAFT))
-        .pathParam("id", id)
-        .put("/{id}")
-        .then()
-        .statusCode(409);
+    given().body(version1.withStatus(Status.DRAFT)).put(PATH_ID, id).then().statusCode(409);
   }
 
   @Test
@@ -290,18 +272,10 @@ public class IdmConnectContractApiIT {
         .setupTenant(true) // load sample data
         .map(
             v -> {
-              // draft
-              given().delete("/465ce0b3-10cd-4da2-8848-db85b63a0a32").then().statusCode(204);
-              // updated
-              given().delete("/7f5473c0-e7c3-427c-9202-ba97a1385e50").then().statusCode(400);
-              // pending
-              given().delete("/066e5034-8403-4e51-99db-8378d3239a14").then().statusCode(400);
-              // pending_edit
-              given().delete("/5fd84d19-8c6c-45b8-bd79-69b90b2e35d5").then().statusCode(400);
-              // transmission_error
-              given().delete("/961dad38-bdd2-4886-ab55-392df4ccfe39").then().statusCode(400);
-              // transmission_error_edit
-              given().delete("/d4927c21-1bbb-4be0-905d-8b4fa02ccc42").then().statusCode(400);
+              for (TestEntities entity : TestEntities.values()) {
+                int expectedStatusCode = entity.getInitialStatus().equals(Status.DRAFT) ? 204 : 400;
+                given().delete(PATH_ID, entity.getId()).then().statusCode(expectedStatusCode);
+              }
               return succeededFuture();
             })
         .onComplete(context.asyncAssertSuccess());

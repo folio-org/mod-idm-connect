@@ -1,6 +1,6 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.impl.Constants.TABLE_NAME_CONTRACTS;
+import static org.folio.idmconnect.Constants.TABLE_NAME_CONTRACTS;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.io.Resources;

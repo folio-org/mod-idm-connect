@@ -1,4 +1,4 @@
-package org.folio.testutil;
+package org.folio.utils;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
