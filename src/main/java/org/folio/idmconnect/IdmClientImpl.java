@@ -27,15 +27,15 @@ import org.folio.rest.tools.utils.VertxUtils;
 
 public class IdmClientImpl implements IdmClient {
 
-  private final String IDM_URL;
-  private final String IDM_CONTRACT_URL;
-  private final String IDM_TOKEN;
+  private final String idmUrl;
+  private final String idmContractUrl;
+  private final String idmToken;
   private final WebClient webClient;
 
   public IdmClientImpl() {
-    IDM_URL = System.getenv(ENVVAR_IDM_URL);
-    IDM_CONTRACT_URL = System.getenv(ENVVAR_IDM_CONTRACT_URL);
-    IDM_TOKEN = System.getenv(ENVVAR_IDM_TOKEN);
+    idmUrl = System.getenv(ENVVAR_IDM_URL);
+    idmContractUrl = System.getenv(ENVVAR_IDM_CONTRACT_URL);
+    idmToken = System.getenv(ENVVAR_IDM_TOKEN);
     webClient = WebClient.create(VertxUtils.getVertxFromContextOrNew());
   }
 
@@ -86,11 +86,11 @@ public class IdmClientImpl implements IdmClient {
 
   @Override
   public Future<Response> search(String firstName, String lastName, String dateOfBirth) {
-    return Optional.ofNullable(IDM_URL)
+    return Optional.ofNullable(idmUrl)
         .map(
             url ->
                 createSearchIdmRequest(
-                        webClient, IDM_URL, IDM_TOKEN, firstName, lastName, dateOfBirth)
+                        webClient, idmUrl, idmToken, firstName, lastName, dateOfBirth)
                     .send()
                     .map(this::toResponse))
         .orElse(succeededFuture(createResponse(500, TEXT_PLAIN, MSG_IDM_URL_NOT_SET)));
@@ -98,14 +98,14 @@ public class IdmClientImpl implements IdmClient {
 
   @Override
   public Future<Response> putContract(Contract contract) {
-    return Optional.ofNullable(IDM_CONTRACT_URL)
+    return Optional.ofNullable(idmContractUrl)
         .map(url -> webClient.putAbs(url).sendJson(contract).map(this::toResponse))
         .orElse(succeededFuture(createResponse(500, TEXT_PLAIN, MSG_IDM_CONTRACT_URL_NOT_SET)));
   }
 
   @Override
   public Future<Response> postContract(Contract contract) {
-    return Optional.ofNullable(IDM_CONTRACT_URL)
+    return Optional.ofNullable(idmContractUrl)
         .map(url -> webClient.postAbs(url).sendJson(contract).map(this::toResponse))
         .orElse(succeededFuture(createResponse(500, TEXT_PLAIN, MSG_IDM_CONTRACT_URL_NOT_SET)));
   }
