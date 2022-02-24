@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.io.Resources;
 import io.restassured.RestAssured;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.JacksonCodec;
@@ -79,15 +80,18 @@ public class CustomTenantApiIT {
   public void testWithoutLoadSampleAttribute(TestContext context) {
     tenantUtil
         .setupTenant(new TenantAttributes().withModuleTo(ModuleName.getModuleVersion()))
+        .map(
+            v -> {
+              Contracts getResult = given().get().then().extract().as(Contracts.class);
+              assertThat(getResult)
+                  .satisfies(
+                      contracts -> {
+                        assertThat(contracts.getTotalRecords()).isZero();
+                        assertThat(contracts.getContracts()).isEmpty();
+                      });
+              return Future.succeededFuture();
+            })
         .onComplete(context.asyncAssertSuccess());
-
-    Contracts getResult = given().get().then().extract().as(Contracts.class);
-    assertThat(getResult)
-        .satisfies(
-            contracts -> {
-              assertThat(contracts.getTotalRecords()).isZero();
-              assertThat(contracts.getContracts()).isEmpty();
-            });
   }
 
   @Test
@@ -97,17 +101,21 @@ public class CustomTenantApiIT {
             new TenantAttributes()
                 .withModuleTo(ModuleName.getModuleVersion())
                 .withParameters(List.of(new Parameter().withKey("loadSample").withValue("true"))))
+        .map(
+            v -> {
+              Contracts getResult = given().get().then().extract().as(Contracts.class);
+              assertThat(getResult)
+                  .satisfies(
+                      contracts -> {
+                        assertThat(contracts.getTotalRecords()).isEqualTo(20);
+                        assertThat(contracts.getContracts()).hasSize(10);
+                        assertThat(contracts.getContracts())
+                            .usingRecursiveFieldByFieldElementComparatorIgnoringFields(
+                                "metadata", "version")
+                            .isSubsetOf(exampleContracts);
+                      });
+              return Future.succeededFuture();
+            })
         .onComplete(context.asyncAssertSuccess());
-
-    Contracts getResult = given().get().then().extract().as(Contracts.class);
-    assertThat(getResult)
-        .satisfies(
-            contracts -> {
-              assertThat(contracts.getTotalRecords()).isEqualTo(20);
-              assertThat(contracts.getContracts()).hasSize(10);
-              assertThat(contracts.getContracts())
-                  .usingRecursiveFieldByFieldElementComparatorIgnoringFields("metadata", "version")
-                  .isSubsetOf(exampleContracts);
-            });
   }
 }
