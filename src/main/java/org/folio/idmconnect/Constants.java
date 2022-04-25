@@ -9,9 +9,6 @@ public class Constants {
   public static final String MSG_IDM_URL_NOT_SET = "IDM_URL environment variable not set.";
   public static final String MSG_IDM_CONTRACT_URL_NOT_SET =
       "IDM_CONTRACT_URL environment variable not set.";
-  public static final String ENVVAR_IDM_TOKEN = "IDM_TOKEN";
-  public static final String ENVVAR_IDM_URL = "IDM_URL";
-  public static final String ENVVAR_IDM_CONTRACT_URL = "IDM_CONTRACT_URL";
 
   private Constants() {}
 }

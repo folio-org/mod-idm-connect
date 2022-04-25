@@ -5,9 +5,6 @@ import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
-import static org.folio.idmconnect.Constants.ENVVAR_IDM_CONTRACT_URL;
-import static org.folio.idmconnect.Constants.ENVVAR_IDM_TOKEN;
-import static org.folio.idmconnect.Constants.ENVVAR_IDM_URL;
 import static org.folio.idmconnect.Constants.MSG_IDM_CONTRACT_URL_NOT_SET;
 import static org.folio.idmconnect.Constants.MSG_IDM_URL_NOT_SET;
 
@@ -23,7 +20,6 @@ import java.util.stream.Stream;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import org.folio.rest.jaxrs.model.Contract;
-import org.folio.rest.tools.utils.VertxUtils;
 
 public class IdmClientImpl implements IdmClient {
 
@@ -32,11 +28,11 @@ public class IdmClientImpl implements IdmClient {
   private final String idmToken;
   private final WebClient webClient;
 
-  public IdmClientImpl() {
-    idmUrl = System.getenv(ENVVAR_IDM_URL);
-    idmContractUrl = System.getenv(ENVVAR_IDM_CONTRACT_URL);
-    idmToken = System.getenv(ENVVAR_IDM_TOKEN);
-    webClient = WebClient.create(VertxUtils.getVertxFromContextOrNew());
+  public IdmClientImpl(IdmClientConfig config, WebClient webClient) {
+    idmUrl = config.getIdmUrl();
+    idmContractUrl = config.getIdmContractUrl();
+    idmToken = config.getIdmToken();
+    this.webClient = webClient;
   }
 
   private String toBasicIsoDate(String dateString) {

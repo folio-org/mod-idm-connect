@@ -17,6 +17,9 @@ University Library. You may not find this module useful in different environment
 For the module to be able to connect to the external IDM system you need to provide following
 environment variables:
 
-* `IDM_TOKEN` - the required access token for the IDM endpoints
-* `IDM_URL` - search endpoint
-* `IDM_CONTRACT_URL` - contracts endpoint
+| Variable           | Description                                     | Default value |
+|--------------------|-------------------------------------------------|---------------|
+| `IDM_TOKEN`        | Access token required for the IDM endpoints     |               |
+| `IDM_URL`          | Search endpoint                                 |               |
+| `IDM_CONTRACT_URL` | Contracts endpoint                              |               |
+| `IDM_TRUST_ALL`    | Whether all servers (SSL/TLS) should be trusted | false         |
