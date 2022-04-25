@@ -10,7 +10,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.idmconnect.Constants.ENVVAR_IDM_CONTRACT_URL;
+import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_CONTRACT_URL;
 import static org.folio.utils.TestConstants.HOST;
 import static org.folio.utils.TestConstants.IDM_TOKEN;
 import static org.folio.utils.TestConstants.PATH_ID;

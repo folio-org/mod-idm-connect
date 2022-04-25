@@ -9,9 +9,9 @@ import static io.restassured.RestAssured.given;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.idmconnect.Constants.BASE_PATH_SEARCHIDM;
-import static org.folio.idmconnect.Constants.ENVVAR_IDM_TOKEN;
-import static org.folio.idmconnect.Constants.ENVVAR_IDM_URL;
 import static org.folio.idmconnect.Constants.MSG_IDM_URL_NOT_SET;
+import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_TOKEN;
+import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_URL;
 import static org.folio.utils.TestConstants.IDM_TOKEN;
 import static org.folio.utils.TestConstants.setupRestAssured;
 
