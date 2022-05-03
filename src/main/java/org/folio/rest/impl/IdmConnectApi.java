@@ -214,6 +214,27 @@ public class IdmConnectApi implements IdmConnect {
         .onComplete(asyncResultHandler);
   }
 
+  @Override
+  public void postIdmConnectUbreadernumber(
+      String unilogin,
+      String uBReaderNumber,
+      Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) {
+    IdmClientFactory.create()
+        .postUBReaderNumber(unilogin, uBReaderNumber)
+        .onComplete(asyncResultHandler);
+  }
+
+  @Override
+  public void deleteIdmConnectUbreadernumber(
+      String unilogin,
+      Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) {
+    IdmClientFactory.create().deleteUBReaderNumber(unilogin).onComplete(asyncResultHandler);
+  }
+
   private Future<DeleteIdmConnectContractByIdResponse> deleteContract(
       Contract contract, Conn conn) {
     if (contract == null) {

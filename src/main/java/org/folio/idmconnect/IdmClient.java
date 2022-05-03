@@ -11,4 +11,8 @@ public interface IdmClient {
   Future<Response> putContract(Contract contract);
 
   Future<Response> postContract(Contract contract);
+
+  Future<Response> postUBReaderNumber(String unilogin, String readerNumber);
+
+  Future<Response> deleteUBReaderNumber(String unilogin);
 }
