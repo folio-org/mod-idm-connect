@@ -7,6 +7,8 @@ import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_URL;
 public class Constants {
 
   public static final String TABLE_NAME_CONTRACTS = "contract";
+  public static final String JSONB_FIELD_UNILOGIN = "uniLogin";
+  public static final String JSONB_FIELD_LIBRARYCARD = "libraryCard";
   public static final String BASE_PATH_CONTRACTS = "/idm-connect/contract"; // NOSONAR
   public static final String BASE_PATH_SEARCHIDM = "/idm-connect/searchidm"; // NOSONAR
   public static final String BASE_PATH_READER_NUMDER = "/idm-connect/ubreadernumber"; // NOSONAR

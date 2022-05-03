@@ -2,6 +2,8 @@ package org.folio.rest.impl;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.idmconnect.Constants.JSONB_FIELD_LIBRARYCARD;
+import static org.folio.idmconnect.Constants.JSONB_FIELD_UNILOGIN;
 import static org.folio.idmconnect.Constants.TABLE_NAME_CONTRACTS;
 
 import io.vertx.core.AsyncResult;
@@ -9,6 +11,9 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,6 +32,7 @@ import org.folio.rest.jaxrs.resource.IdmConnect;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.tools.utils.TenantTool;
 
 public class IdmConnectApi implements IdmConnect {
 
@@ -224,6 +230,12 @@ public class IdmConnectApi implements IdmConnect {
       Context vertxContext) {
     IdmClientFactory.create()
         .postUBReaderNumber(unilogin, uBReaderNumber)
+        .onSuccess(
+            resp -> {
+              if (resp.getStatus() / 100 == 2) {
+                updateContractLibraryCard(okapiHeaders, vertxContext, unilogin, uBReaderNumber);
+              }
+            })
         .onComplete(asyncResultHandler);
   }
 
@@ -233,7 +245,15 @@ public class IdmConnectApi implements IdmConnect {
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-    IdmClientFactory.create().deleteUBReaderNumber(unilogin).onComplete(asyncResultHandler);
+    IdmClientFactory.create()
+        .deleteUBReaderNumber(unilogin)
+        .onSuccess(
+            resp -> {
+              if (resp.getStatus() / 100 == 2) {
+                updateContractLibraryCard(okapiHeaders, vertxContext, unilogin, null);
+              }
+            })
+        .onComplete(asyncResultHandler);
   }
 
   private Future<DeleteIdmConnectContractByIdResponse> deleteContract(
@@ -294,5 +314,40 @@ public class IdmConnectApi implements IdmConnect {
                 (rs.rowCount() == 1
                     ? succeededFuture()
                     : failedFuture("Updating status of " + contract.getId() + " failed")));
+  }
+
+  private Future<RowSet<Row>> updateContractLibraryCard(
+      Map<String, String> okapiHeaders, Context vertxContext, String unilogin, String libraryCard) {
+    PostgresClient pgClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
+    if (unilogin == null) {
+      return failedFuture("unilogin cant be null");
+    }
+
+    String table =
+        PostgresClient.convertToPsqlStandard(TenantTool.tenantId(okapiHeaders))
+            + "."
+            + TABLE_NAME_CONTRACTS;
+
+    if (libraryCard != null) {
+      return pgClient.execute(
+          "UPDATE "
+              + table
+              + " SET jsonb = jsonb_set(jsonb, '{"
+              + JSONB_FIELD_LIBRARYCARD
+              + "}', $1) WHERE (jsonb->'"
+              + JSONB_FIELD_UNILOGIN
+              + "') = $2",
+          Tuple.of(libraryCard, unilogin));
+    } else {
+      return pgClient.execute(
+          "UPDATE "
+              + table
+              + " SET jsonb = jsonb - '"
+              + JSONB_FIELD_LIBRARYCARD
+              + "' WHERE (jsonb->'"
+              + JSONB_FIELD_UNILOGIN
+              + "') = $1",
+          Tuple.of(unilogin));
+    }
   }
 }
