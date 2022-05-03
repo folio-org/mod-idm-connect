@@ -15,6 +15,9 @@ traits:
   pageable: !include raml-util/traits/pageable.raml
   searchable: !include raml-util/traits/searchable.raml
   validate: !include raml-util/traits/validation.raml
+  unilogin: !include traits/unilogin.raml
+  ubreadernumber: !include traits/ubreadernumber.raml
+  idmresponses: !include traits/idmresponses.raml
 
 resourceTypes:
   collection: !include raml-util/rtypes/collection.raml
@@ -51,18 +54,12 @@ resourceTypes:
     /{id}/transmit:
       description: "Transmit the walk-in contract with id to external IDM system and update its status"
       get:
-        responses:
-          200:
-            description: "Transmission was successful"
-          400:
-            description: "Transmission was not successful"
-          500:
-            description: "Internal server error"
-            body:
-              text/plain:
+        description: "Transmit the walk-in contract with id to external IDM system and update its status"
+        is: [ idmresponses ]
     /bulk-delete:
       description: Delete multiple walk-in contracts
       post:
+        description: Delete multiple walk-in contracts
         is: [ validate ]
         body:
           application/json:
@@ -85,6 +82,8 @@ resourceTypes:
   /searchidm:
     description: Query external IDM system for existing users
     get:
+      description: Get existing users
+      is: [ idmresponses ]
       queryParameters:
         firstname:
           description: Users first name
@@ -95,20 +94,12 @@ resourceTypes:
         dateOfBirth:
           description: Users date of birth
           example: 2015-12-24
-      responses:
-        200:
-          description: IDM returned OK
-          body:
-            application/json:
-        400:
-          description: IDM returned Bad Request
-          body:
-            application/json:
-        401:
-          description: IDM returned Unauthorized
-          body:
-            application/json:
-        500:
-          description: Internal server error
-          body:
-            text/plain:
+
+  /ubreadernumber:
+    description: Access external IDM API for UBReaderNumber
+    post:
+      description: Set a UBReaderNumber
+      is: [ unilogin, ubreadernumber, idmresponses]
+    delete:
+      description: Delete a UBReaderNumber
+      is: [ unilogin, idmresponses ]

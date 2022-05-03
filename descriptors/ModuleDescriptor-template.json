@@ -78,6 +78,17 @@
           "permissionsRequired": [
             "idmconnect.searchidm.get"
           ]
+        },
+        {
+          "methods": [
+            "POST",
+            "DELETE"
+          ],
+          "pathPattern": "/idm-connect/ubreadernumber",
+          "permissionsRequired": [
+            "idmconnect.ubreadernumber.post",
+            "idmconnect.ubreadernumber.delete"
+          ]
         }
       ]
     },
@@ -126,7 +137,7 @@
     {
       "permissionName": "idmconnect.contract.transmit.get",
       "displayName": "idmconnect contract transmit get",
-      "description": "Transmit contract to IDM"
+      "description": "Transmit contract to IDM and update local contract status"
     },
     {
       "permissionName": "idmconnect.contract.bulk-delete",
@@ -137,6 +148,16 @@
       "permissionName": "idmconnect.searchidm.get",
       "displayName": "idmconnect searchidm get",
       "description": "Search external IDM system"
+    },
+    {
+      "permissionName": "idmconnect.ubreadernumber.post",
+      "displayName": "idmconnect ubreadernumber post",
+      "description": "Post ubreadernumber to external IDM system and update local contract"
+    },
+    {
+      "permissionName": "idmconnect.ubreadernumber.delete",
+      "displayName": "idmconnect ubreadernumber delete",
+      "description": "Delete ubreadernumber from external IDM system and update local contract"
     },
     {
       "permissionName": "idmconnect.contract.all",
@@ -160,12 +181,22 @@
       ]
     },
     {
+      "permissionName": "idmconnect.ubreadernumber.all",
+      "displayName": "idmconnect ubreadernumber all",
+      "description": "All permissions related to ubreadernumber",
+      "subPermissions": [
+        "idmconnect.ubreadernumber.post",
+        "idmconnect.ubreadernumber.delete"
+      ]
+    },
+    {
       "permissionName": "idmconnect.all",
       "displayName": "idmconnect all",
       "description": "All permissions for the idm-connect module",
       "subPermissions": [
         "idmconnect.contract.all",
-        "idmconnect.searchidm.all"
+        "idmconnect.searchidm.all",
+        "idmconnect.ubreadernumber.all"
       ]
     }
   ],
