@@ -13,6 +13,7 @@ import static org.folio.idmconnect.Constants.MSG_IDM_CONTRACT_URL_NOT_SET;
 import static org.folio.idmconnect.Constants.MSG_IDM_READER_NUMBER_URL_NOT_SET;
 import static org.folio.idmconnect.Constants.MSG_IDM_URL_NOT_SET;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
@@ -24,7 +25,6 @@ import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import org.folio.rest.jaxrs.model.Contract;
 
 public class IdmClientImpl implements IdmClient {
@@ -55,12 +55,17 @@ public class IdmClientImpl implements IdmClient {
     return Response.status(500).header(CONTENT_TYPE, TEXT_PLAIN).entity(o).build();
   }
 
-  private Response toResponse(HttpResponse<Buffer> bufferHttpResponse) {
-    ResponseBuilder responseBuilder =
-        Response.status(bufferHttpResponse.statusCode())
-            .header(CONTENT_TYPE, bufferHttpResponse.getHeader(CONTENT_TYPE))
-            .entity(bufferHttpResponse.bodyAsString());
-    return responseBuilder.build();
+  private Future<Response> toResponseFuture(AsyncResult<HttpResponse<Buffer>> ar) {
+    if (ar.succeeded()) {
+      HttpResponse<Buffer> bufferHttpResponse = ar.result();
+      return succeededFuture(
+          Response.status(bufferHttpResponse.statusCode())
+              .header(CONTENT_TYPE, bufferHttpResponse.getHeader(CONTENT_TYPE))
+              .entity(bufferHttpResponse.bodyAsString())
+              .build());
+    } else {
+      return succeededFuture(createResponse(ar.cause().getMessage()));
+    }
   }
 
   private HttpRequest<Buffer> createIdmRequest(HttpMethod httpMethod, String requestUri) {
@@ -104,21 +109,22 @@ public class IdmClientImpl implements IdmClient {
                             "date_of_birth",
                             ofNullable(toBasicIsoDate(dateOfBirth))))
                     .send()
-                    .map(this::toResponse))
+                    .transform(this::toResponseFuture))
         .orElse(succeededFuture(createResponse(MSG_IDM_URL_NOT_SET)));
   }
 
   @Override
   public Future<Response> putContract(Contract contract) {
     return ofNullable(idmContractUrl)
-        .map(url -> createIdmRequest(PUT, url).sendJson(contract).map(this::toResponse))
+        .map(url -> createIdmRequest(PUT, url).sendJson(contract).transform(this::toResponseFuture))
         .orElse(succeededFuture(createResponse(MSG_IDM_CONTRACT_URL_NOT_SET)));
   }
 
   @Override
   public Future<Response> postContract(Contract contract) {
     return ofNullable(idmContractUrl)
-        .map(url -> createIdmRequest(POST, url).sendJson(contract).map(this::toResponse))
+        .map(
+            url -> createIdmRequest(POST, url).sendJson(contract).transform(this::toResponseFuture))
         .orElse(succeededFuture(createResponse(MSG_IDM_CONTRACT_URL_NOT_SET)));
   }
 
@@ -129,9 +135,8 @@ public class IdmClientImpl implements IdmClient {
             url ->
                 createIdmUBReaderNumberRequest(POST, url, unilogin, readerNumber)
                     .send()
-                    .map(this::toResponse))
-        .orElse(
-            succeededFuture(createResponse(MSG_IDM_READER_NUMBER_URL_NOT_SET)));
+                    .transform(this::toResponseFuture))
+        .orElse(succeededFuture(createResponse(MSG_IDM_READER_NUMBER_URL_NOT_SET)));
   }
 
   @Override
@@ -141,7 +146,7 @@ public class IdmClientImpl implements IdmClient {
             url ->
                 createIdmUBReaderNumberRequest(DELETE, url, unilogin, null)
                     .send()
-                    .map(this::toResponse))
+                    .transform(this::toResponseFuture))
         .orElse(succeededFuture(createResponse(MSG_IDM_READER_NUMBER_URL_NOT_SET)));
   }
 }

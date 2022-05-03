@@ -16,8 +16,11 @@ import static org.folio.idmconnect.Constants.BASE_PATH_READER_NUMDER;
 import static org.folio.idmconnect.Constants.MSG_IDM_READER_NUMBER_URL_NOT_SET;
 import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_READER_NUMBER_URL;
 import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_TOKEN;
+import static org.folio.utils.TestConstants.CONNECTION_REFUSED;
+import static org.folio.utils.TestConstants.HOST;
 import static org.folio.utils.TestConstants.IDM_TOKEN;
 import static org.folio.utils.TestConstants.setupRestAssured;
+import static org.hamcrest.Matchers.containsString;
 
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -167,5 +170,13 @@ public class IdmConnectUBReaderNumberApiIT {
         .statusCode(404)
         .contentType(APPLICATION_JSON)
         .body(Matchers.equalTo(failureResponseDefinition.getBody()));
+  }
+
+  @Test
+  public void testIdmApiNotAvailable() {
+    String unvailableUrl = HOST + ":" + NetworkUtils.nextFreePort();
+    envs.set(ENVVAR_IDM_READER_NUMBER_URL, unvailableUrl);
+    given().post().then().statusCode(500).body(containsString(CONNECTION_REFUSED));
+    given().delete().then().statusCode(500).body(containsString(CONNECTION_REFUSED));
   }
 }

@@ -17,6 +17,7 @@ public class TestConstants {
   public static final String IDM_TOKEN = "someToken";
   public static final String PATH_TRANSMIT = "/{id}/transmit";
   public static final String PATH_ID = "/{id}";
+  public static final String CONNECTION_REFUSED = "Connection refused";
 
   public static void setupRestAssured(int port) {
     setupRestAssured(port, BASE_PATH_CONTRACTS);

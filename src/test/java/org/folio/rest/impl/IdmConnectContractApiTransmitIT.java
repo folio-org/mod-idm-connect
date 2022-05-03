@@ -11,6 +11,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_CONTRACT_URL;
+import static org.folio.utils.TestConstants.CONNECTION_REFUSED;
 import static org.folio.utils.TestConstants.HOST;
 import static org.folio.utils.TestConstants.IDM_TOKEN;
 import static org.folio.utils.TestConstants.PATH_ID;
@@ -23,6 +24,7 @@ import static org.folio.utils.TestEntities.PENDING_EDIT;
 import static org.folio.utils.TestEntities.TRANSMISSION_ERROR;
 import static org.folio.utils.TestEntities.TRANSMISSION_ERROR_EDIT;
 import static org.folio.utils.TestEntities.UPDATED;
+import static org.hamcrest.Matchers.containsString;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
@@ -48,6 +50,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import uk.org.webcompere.systemstubs.rules.EnvironmentVariablesRule;
@@ -58,7 +61,7 @@ public class IdmConnectContractApiTransmitIT {
   private static final Vertx vertx = VertxUtils.getVertxFromContextOrNew();
   private static TenantUtil tenantUtil;
 
-  @ClassRule public static EnvironmentVariablesRule envs = new EnvironmentVariablesRule();
+  @Rule public EnvironmentVariablesRule envs = new EnvironmentVariablesRule();
 
   @ClassRule
   public static WireMockRule idmApiMock =
@@ -206,5 +209,25 @@ public class IdmConnectContractApiTransmitIT {
     given().get(PATH_TRANSMIT, UPDATED.getId()).then().statusCode(expectedStatusCode);
     assertThat(given().get(PATH_ID, UPDATED.getId()).as(Contract.class).getStatus())
         .isEqualTo(UPDATED.getFailedStatus());
+  }
+
+  @Test
+  public void testIdmApiNotAvailable() {
+    String unvailableUrl = HOST + ":" + NetworkUtils.nextFreePort();
+    envs.set(ENVVAR_IDM_CONTRACT_URL, unvailableUrl);
+
+    // POST
+    given()
+        .get(PATH_TRANSMIT, DRAFT.getId())
+        .then()
+        .statusCode(500)
+        .body(containsString(CONNECTION_REFUSED));
+
+    // PUT
+    given()
+        .get(PATH_TRANSMIT, PENDING.getId())
+        .then()
+        .statusCode(500)
+        .body(containsString(CONNECTION_REFUSED));
   }
 }

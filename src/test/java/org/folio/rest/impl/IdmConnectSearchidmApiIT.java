@@ -12,8 +12,11 @@ import static org.folio.idmconnect.Constants.BASE_PATH_SEARCHIDM;
 import static org.folio.idmconnect.Constants.MSG_IDM_URL_NOT_SET;
 import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_TOKEN;
 import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_URL;
+import static org.folio.utils.TestConstants.CONNECTION_REFUSED;
+import static org.folio.utils.TestConstants.HOST;
 import static org.folio.utils.TestConstants.IDM_TOKEN;
 import static org.folio.utils.TestConstants.setupRestAssured;
+import static org.hamcrest.Matchers.containsString;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -131,5 +134,12 @@ public class IdmConnectSearchidmApiIT {
                 .extract()
                 .asString())
         .isEqualTo("[]");
+  }
+
+  @Test
+  public void testIdmApiNotAvailable() {
+    String unvailableUrl = HOST + ":" + NetworkUtils.nextFreePort();
+    envs.set(ENVVAR_IDM_URL, unvailableUrl);
+    given().get().then().statusCode(500).body(containsString(CONNECTION_REFUSED));
   }
 }

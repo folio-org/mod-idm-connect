@@ -135,7 +135,8 @@ public class IdmConnectApi implements IdmConnect {
                                                 v ->
                                                     succeededFuture(
                                                         GetIdmConnectContractTransmitByIdResponse
-                                                            .respond500WithTextPlain(ar.cause())));
+                                                            .respond500WithTextPlain(
+                                                                ar.cause().getMessage())));
                                       }
                                     }))
                     .otherwise(GetIdmConnectContractTransmitByIdResponse::respond500WithTextPlain)
