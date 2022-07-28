@@ -146,9 +146,10 @@ public class IdmConnectApi implements IdmConnect {
                                                             .respond500WithTextPlain(
                                                                 ar.cause().getMessage())));
                                       }
-                                    }))
-                    .otherwise(GetIdmConnectContractTransmitByIdResponse::respond500WithTextPlain)
-                    .onComplete(resp -> asyncResultHandler.handle(succeededFuture(resp.result()))));
+                                    })))
+        .otherwise(
+            t -> GetIdmConnectContractTransmitByIdResponse.respond500WithTextPlain(t.getMessage()))
+        .onComplete(asyncResultHandler);
   }
 
   @Override
