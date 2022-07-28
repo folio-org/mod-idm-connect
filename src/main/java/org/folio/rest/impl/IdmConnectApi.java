@@ -5,6 +5,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.idmconnect.Constants.JSONB_FIELD_LIBRARYCARD;
 import static org.folio.idmconnect.Constants.JSONB_FIELD_UNILOGIN;
 import static org.folio.idmconnect.Constants.TABLE_NAME_CONTRACTS;
+import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
@@ -30,6 +31,7 @@ import org.folio.rest.jaxrs.model.Contract.Status;
 import org.folio.rest.jaxrs.model.Contracts;
 import org.folio.rest.jaxrs.resource.IdmConnect;
 import org.folio.rest.persist.Conn;
+import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
@@ -198,14 +200,21 @@ public class IdmConnectApi implements IdmConnect {
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-    PgUtil.put(
-        TABLE_NAME_CONTRACTS,
-        entity,
-        id,
-        okapiHeaders,
-        vertxContext,
-        PutIdmConnectContractByIdResponse.class,
-        asyncResultHandler);
+
+    PgUtil.postgresClient(vertxContext, okapiHeaders)
+        .withTrans(
+            conn ->
+                conn.getByIdForUpdate(TABLE_NAME_CONTRACTS, id, Contract.class)
+                    .flatMap(contract -> updateContract(contract, entity, conn)))
+        .otherwise(
+            t -> {
+              if (PgExceptionUtil.isVersionConflict(t)) {
+                return PutIdmConnectContractByIdResponse.respond409WithTextPlain(t.getCause());
+              } else {
+                return PutIdmConnectContractByIdResponse.respond500WithTextPlain(t);
+              }
+            })
+        .onComplete(asyncResultHandler);
   }
 
   @Override
@@ -273,6 +282,25 @@ public class IdmConnectApi implements IdmConnect {
       return succeededFuture(
           DeleteIdmConnectContractByIdResponse.respond400WithTextPlain(
               "Not allowed to delete contract with status != draft."));
+    }
+  }
+
+  private Future<Response> updateContract(Contract oldContract, Contract newContract, Conn conn) {
+    if (oldContract == null) {
+      return succeededFuture(PutIdmConnectContractByIdResponse.respond404WithTextPlain(null));
+    }
+    if (Objects.equals(oldContract.getLibraryCard(), newContract.getLibraryCard())) {
+      return conn.update(TABLE_NAME_CONTRACTS, newContract, oldContract.getId())
+          .flatMap(
+              rs ->
+                  rs.rowCount() == 1
+                      ? succeededFuture(PutIdmConnectContractByIdResponse.respond204())
+                      : failedFuture("Updated rowCount != 1"));
+    } else {
+      return succeededFuture(
+          PutIdmConnectContractByIdResponse.respond422WithApplicationJson(
+              createValidationErrorMessage(
+                  "libraryCard", newContract.getLibraryCard(), "value cannot be changed")));
     }
   }
 
