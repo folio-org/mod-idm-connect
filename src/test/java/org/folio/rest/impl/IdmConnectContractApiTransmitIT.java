@@ -76,6 +76,7 @@ public class IdmConnectContractApiTransmitIT {
         new TenantUtil(
             new TenantClient(HOST + ":" + port, TENANT, IDM_TOKEN, WebClient.create(vertx)));
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
+    PostgresClient.getInstance(vertx);
 
     DeploymentOptions options =
         new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));

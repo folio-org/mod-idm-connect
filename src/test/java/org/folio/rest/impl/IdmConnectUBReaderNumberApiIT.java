@@ -92,6 +92,8 @@ public class IdmConnectUBReaderNumberApiIT {
     setupRestAssured(port, BASE_PATH_READER_NUMDER);
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
+    PostgresClient.getInstance(vertx);
+
     tenantUtil =
         new TenantUtil(
             new TenantClient(HOST + ":" + port, TENANT, IDM_TOKEN, WebClient.create(vertx)));
