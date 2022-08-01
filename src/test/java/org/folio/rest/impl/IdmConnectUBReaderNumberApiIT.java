@@ -81,7 +81,8 @@ public class IdmConnectUBReaderNumberApiIT {
   public static WireMockRule idmApiMock =
       new WireMockRule(new WireMockConfiguration().dynamicPort(), false);
 
-  @Rule public EnvironmentVariablesRule envs = new EnvironmentVariablesRule();
+  @Rule
+  public EnvironmentVariablesRule envs = new EnvironmentVariablesRule();
 
   @BeforeClass
   public static void beforeClass(TestContext context) {
@@ -147,21 +148,21 @@ public class IdmConnectUBReaderNumberApiIT {
 
   private void assertThatLibraryCardEquals(String libraryCard) {
     assertThat(
-            given()
-                .basePath(BASE_PATH_CONTRACTS)
-                .pathParam("id", SAMPLE_ID)
-                .headers(OKAPI_HEADERS)
-                .get(PATH_ID)
-                .then()
-                .statusCode(200)
-                .extract()
-                .as(Contract.class)
-                .getLibraryCard())
+        given()
+            .basePath(BASE_PATH_CONTRACTS)
+            .pathParam("id", SAMPLE_ID)
+            .headers(OKAPI_HEADERS)
+            .get(PATH_ID)
+            .then()
+            .statusCode(200)
+            .extract()
+            .as(Contract.class)
+            .getLibraryCard())
         .isEqualTo(libraryCard);
   }
 
   @Test
-  public void testPostUBReaderNumber() {
+  public void testPostUBReaderNumber() throws InterruptedException {
     // missing url
     given().post().then().statusCode(500).body(Matchers.equalTo(MSG_IDM_READER_NUMBER_URL_NOT_SET));
     idmApiMock.verify(0, postRequestedFor(urlPathEqualTo(MOCK_BASE_PATH)));
@@ -189,11 +190,13 @@ public class IdmConnectUBReaderNumberApiIT {
         .statusCode(successResponseDefinition.getStatus())
         .contentType(APPLICATION_JSON)
         .body(Matchers.equalTo(successResponseDefinition.getBody()));
+
+    Thread.sleep(1500);
     assertThatLibraryCardEquals(READER_NUMBER_VALUE);
   }
 
   @Test
-  public void testDeleteUBReaderNumber() {
+  public void testDeleteUBReaderNumber() throws InterruptedException {
     // missing url
     given()
         .delete()
@@ -225,6 +228,8 @@ public class IdmConnectUBReaderNumberApiIT {
         .statusCode(successResponseDefinition.getStatus())
         .contentType(APPLICATION_JSON)
         .body(Matchers.equalTo(successResponseDefinition.getBody()));
+
+    Thread.sleep(1500);
     assertThatLibraryCardEquals(null);
   }
 
