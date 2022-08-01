@@ -106,12 +106,8 @@ public class IdmConnectApi implements IdmConnect {
             conn ->
                 conn.getByIdForUpdate(TABLE_NAME_CONTRACTS, id, Contract.class)
                     .flatMap(contract -> deleteContract(contract, conn)))
-        .onSuccess(deleteResponse -> asyncResultHandler.handle(succeededFuture(deleteResponse)))
-        .onFailure(
-            t ->
-                asyncResultHandler.handle(
-                    succeededFuture(
-                        DeleteIdmConnectContractByIdResponse.respond500WithTextPlain(t))));
+        .otherwise(DeleteIdmConnectContractByIdResponse::respond500WithTextPlain)
+        .onComplete(asyncResultHandler);
   }
 
   @Override
@@ -266,19 +262,18 @@ public class IdmConnectApi implements IdmConnect {
         .onComplete(asyncResultHandler);
   }
 
-  private Future<DeleteIdmConnectContractByIdResponse> deleteContract(
-      Contract contract, Conn conn) {
+  private Future<Response> deleteContract(Contract contract, Conn conn) {
     if (contract == null) {
       return succeededFuture(
           DeleteIdmConnectContractByIdResponse.respond404WithTextPlain("Not found"));
     }
     if (contract.getStatus().equals(Status.DRAFT)) {
       return conn.delete(TABLE_NAME_CONTRACTS, contract.getId())
-          .map(
+          .flatMap(
               rs ->
-                  rs.rowCount() == 0
-                      ? DeleteIdmConnectContractByIdResponse.respond404WithTextPlain("Not found")
-                      : DeleteIdmConnectContractByIdResponse.respond204());
+                  rs.rowCount() == 1
+                      ? succeededFuture(DeleteIdmConnectContractByIdResponse.respond204())
+                      : failedFuture("Updated rowCount != 1"));
     } else {
       return succeededFuture(
           DeleteIdmConnectContractByIdResponse.respond400WithTextPlain(
