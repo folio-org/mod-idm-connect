@@ -28,6 +28,7 @@ import io.vertx.ext.web.client.WebClient;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
@@ -74,6 +75,7 @@ public class IdmConnectContractApiIT {
         new TenantUtil(
             new TenantClient(HOST + ":" + port, TENANT, IDM_TOKEN, WebClient.create(vertx)));
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
+    PostgresClient.getInstance(vertx);
 
     DeploymentOptions options =
         new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
@@ -178,6 +180,22 @@ public class IdmConnectContractApiIT {
 
     // DELETE by id
     given().delete(PATH_ID, postResult.getId()).then().statusCode(404);
+  }
+
+  @Test
+  public void testThatPutNonExistingEntityReturns404() {
+    given().body(sampleContract).put(PATH_ID, UUID.randomUUID().toString()).then().statusCode(404);
+  }
+
+  @Test
+  public void testThatPutWithChangedLibraryCardReturns422() {
+    Contract postResult =
+        given().body(sampleContract).post().then().statusCode(201).extract().as(Contract.class);
+    given()
+        .body(postResult.withLibraryCard("123"))
+        .put(PATH_ID, postResult.getId())
+        .then()
+        .statusCode(422);
   }
 
   @Test
