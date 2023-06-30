@@ -10,8 +10,6 @@ import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.idmconnect.Constants.BASE_PATH_SEARCHIDM;
 import static org.folio.idmconnect.Constants.MSG_IDM_URL_NOT_SET;
-import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_TOKEN;
-import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_URL;
 import static org.folio.utils.TestConstants.CONNECTION_REFUSED;
 import static org.folio.utils.TestConstants.HOST;
 import static org.folio.utils.TestConstants.IDM_TOKEN;
@@ -27,16 +25,16 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import java.util.Map;
+import org.folio.idmconnect.IdmClientConfig;
+import org.folio.idmconnect.IdmClientFactory;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.tools.utils.VertxUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import uk.org.webcompere.systemstubs.rules.EnvironmentVariablesRule;
 
 @RunWith(VertxUnitRunner.class)
 public class IdmConnectSearchidmApiIT {
@@ -47,8 +45,6 @@ public class IdmConnectSearchidmApiIT {
   @ClassRule
   public static WireMockRule idmApiMock =
       new WireMockRule(new WireMockConfiguration().dynamicPort());
-
-  @Rule public EnvironmentVariablesRule envs = new EnvironmentVariablesRule();
 
   @BeforeClass
   public static void beforeClass(TestContext context) {
@@ -93,36 +89,34 @@ public class IdmConnectSearchidmApiIT {
 
   @Test
   public void testMissingUrl() {
-    assertThat(System.getenv(ENVVAR_IDM_URL)).isNull();
+    IdmClientFactory.setIdmClientConfig(new IdmClientConfig.Builder().build());
     assertThat(given().get().then().statusCode(500).extract().body().asString())
         .isEqualTo(MSG_IDM_URL_NOT_SET);
   }
 
   @Test
   public void testInvalidUrl() {
-    envs.set(ENVVAR_IDM_URL, "");
-    assertThat(System.getenv(ENVVAR_IDM_URL)).isNotNull();
+    IdmClientFactory.setIdmClientConfig(new IdmClientConfig.Builder().idmUrl("").build());
     given().get().then().statusCode(400);
   }
 
   @Test
   public void testMissingToken() {
-    envs.set(ENVVAR_IDM_URL, IDM_MOCK_URL);
-    assertThat(System.getenv(ENVVAR_IDM_TOKEN)).isNull();
+    IdmClientFactory.setIdmClientConfig(new IdmClientConfig.Builder().idmUrl(IDM_MOCK_URL).build());
     given().get().then().statusCode(401);
   }
 
   @Test
   public void testMissingQueryParameters() {
-    envs.set(ENVVAR_IDM_URL, IDM_MOCK_URL);
-    envs.set(ENVVAR_IDM_TOKEN, IDM_TOKEN);
+    IdmClientFactory.setIdmClientConfig(
+        new IdmClientConfig.Builder().idmUrl(IDM_MOCK_URL).idmToken(IDM_TOKEN).build());
     given().get().then().statusCode(400);
   }
 
   @Test
   public void testRequestOk() {
-    envs.set(ENVVAR_IDM_URL, IDM_MOCK_URL);
-    envs.set(ENVVAR_IDM_TOKEN, IDM_TOKEN);
+    IdmClientFactory.setIdmClientConfig(
+        new IdmClientConfig.Builder().idmUrl(IDM_MOCK_URL).idmToken(IDM_TOKEN).build());
     assertThat(
             given()
                 .queryParams(
@@ -138,8 +132,9 @@ public class IdmConnectSearchidmApiIT {
 
   @Test
   public void testIdmApiNotAvailable() {
-    String unvailableUrl = HOST + ":" + NetworkUtils.nextFreePort();
-    envs.set(ENVVAR_IDM_URL, unvailableUrl);
+    String unavailableUrl = HOST + ":" + NetworkUtils.nextFreePort();
+    IdmClientFactory.setIdmClientConfig(
+        new IdmClientConfig.Builder().idmUrl(unavailableUrl).build());
     given().get().then().statusCode(500).body(containsString(CONNECTION_REFUSED));
   }
 }
