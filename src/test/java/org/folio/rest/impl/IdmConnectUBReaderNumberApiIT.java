@@ -16,8 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.idmconnect.Constants.BASE_PATH_CONTRACTS;
 import static org.folio.idmconnect.Constants.BASE_PATH_READER_NUMDER;
 import static org.folio.idmconnect.Constants.MSG_IDM_READER_NUMBER_URL_NOT_SET;
-import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_READER_NUMBER_URL;
-import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_TOKEN;
 import static org.folio.utils.TestConstants.CONNECTION_REFUSED;
 import static org.folio.utils.TestConstants.HOST;
 import static org.folio.utils.TestConstants.IDM_TOKEN;
@@ -39,6 +37,8 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
 import java.util.Map;
+import org.folio.idmconnect.IdmClientConfig;
+import org.folio.idmconnect.IdmClientFactory;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
@@ -53,10 +53,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import uk.org.webcompere.systemstubs.rules.EnvironmentVariablesRule;
 
 @RunWith(VertxUnitRunner.class)
 public class IdmConnectUBReaderNumberApiIT {
@@ -80,9 +78,6 @@ public class IdmConnectUBReaderNumberApiIT {
   @ClassRule
   public static WireMockRule idmApiMock =
       new WireMockRule(new WireMockConfiguration().dynamicPort(), false);
-
-  @Rule
-  public EnvironmentVariablesRule envs = new EnvironmentVariablesRule();
 
   @BeforeClass
   public static void beforeClass(TestContext context) {
@@ -150,29 +145,35 @@ public class IdmConnectUBReaderNumberApiIT {
 
   private void assertThatLibraryCardEquals(String libraryCard) {
     assertThat(
-        given()
-            .basePath(BASE_PATH_CONTRACTS)
-            .pathParam("id", SAMPLE_ID)
-            .headers(OKAPI_HEADERS)
-            .get(PATH_ID)
-            .then()
-            .statusCode(200)
-            .extract()
-            .as(Contract.class)
-            .getLibraryCard())
+            given()
+                .basePath(BASE_PATH_CONTRACTS)
+                .pathParam("id", SAMPLE_ID)
+                .headers(OKAPI_HEADERS)
+                .get(PATH_ID)
+                .then()
+                .statusCode(200)
+                .extract()
+                .as(Contract.class)
+                .getLibraryCard())
         .isEqualTo(libraryCard);
   }
 
   @Test
   public void testPostUBReaderNumber() throws InterruptedException {
+    IdmClientFactory.setIdmClientConfig(new IdmClientConfig.Builder().build());
     // missing url
     given().post().then().statusCode(500).body(Matchers.equalTo(MSG_IDM_READER_NUMBER_URL_NOT_SET));
     idmApiMock.verify(0, postRequestedFor(urlPathEqualTo(MOCK_BASE_PATH)));
-    envs.set(ENVVAR_IDM_READER_NUMBER_URL, idmApiMockUrl);
+    IdmClientFactory.setIdmClientConfig(
+        new IdmClientConfig.Builder().idmReaderNumberUrl(idmApiMockUrl).build());
 
     // missing token
     given().post().then().statusCode(401);
-    envs.set(ENVVAR_IDM_TOKEN, IDM_TOKEN);
+    IdmClientFactory.setIdmClientConfig(
+        new IdmClientConfig.Builder()
+            .idmReaderNumberUrl(idmApiMockUrl)
+            .idmToken(IDM_TOKEN)
+            .build());
 
     // without query params // failure
     given()
@@ -199,6 +200,7 @@ public class IdmConnectUBReaderNumberApiIT {
 
   @Test
   public void testDeleteUBReaderNumber() throws InterruptedException {
+    IdmClientFactory.setIdmClientConfig(new IdmClientConfig.Builder().build());
     // missing url
     given()
         .delete()
@@ -206,11 +208,16 @@ public class IdmConnectUBReaderNumberApiIT {
         .statusCode(500)
         .body(Matchers.equalTo(MSG_IDM_READER_NUMBER_URL_NOT_SET));
     idmApiMock.verify(0, deleteRequestedFor(urlPathEqualTo(MOCK_BASE_PATH)));
-    envs.set(ENVVAR_IDM_READER_NUMBER_URL, idmApiMockUrl);
+    IdmClientFactory.setIdmClientConfig(
+        new IdmClientConfig.Builder().idmReaderNumberUrl(idmApiMockUrl).build());
 
     // missing token
     given().delete().then().statusCode(401);
-    envs.set(ENVVAR_IDM_TOKEN, IDM_TOKEN);
+    IdmClientFactory.setIdmClientConfig(
+        new IdmClientConfig.Builder()
+            .idmReaderNumberUrl(idmApiMockUrl)
+            .idmToken(IDM_TOKEN)
+            .build());
 
     // with invalid params
     given()
@@ -238,7 +245,8 @@ public class IdmConnectUBReaderNumberApiIT {
   @Test
   public void testIdmApiNotAvailable() {
     String unvailableUrl = HOST + ":" + NetworkUtils.nextFreePort();
-    envs.set(ENVVAR_IDM_READER_NUMBER_URL, unvailableUrl);
+    IdmClientFactory.setIdmClientConfig(
+        new IdmClientConfig.Builder().idmReaderNumberUrl(unvailableUrl).build());
     given().post().then().statusCode(500).body(containsString(CONNECTION_REFUSED));
     given().delete().then().statusCode(500).body(containsString(CONNECTION_REFUSED));
   }

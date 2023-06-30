@@ -10,7 +10,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.idmconnect.IdmClientConfig.ENVVAR_IDM_CONTRACT_URL;
 import static org.folio.utils.TestConstants.CONNECTION_REFUSED;
 import static org.folio.utils.TestConstants.HOST;
 import static org.folio.utils.TestConstants.IDM_TOKEN;
@@ -37,6 +36,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
+import org.folio.idmconnect.IdmClientConfig;
+import org.folio.idmconnect.IdmClientFactory;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
@@ -50,18 +51,14 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import uk.org.webcompere.systemstubs.rules.EnvironmentVariablesRule;
 
 @RunWith(VertxUnitRunner.class)
 public class IdmConnectContractApiTransmitIT {
 
   private static final Vertx vertx = VertxUtils.getVertxFromContextOrNew();
   private static TenantUtil tenantUtil;
-
-  @Rule public EnvironmentVariablesRule envs = new EnvironmentVariablesRule();
 
   @ClassRule
   public static WireMockRule idmApiMock =
@@ -93,7 +90,8 @@ public class IdmConnectContractApiTransmitIT {
   public void setUp(TestContext context) {
     tenantUtil.setupTenant(true).onComplete(context.asyncAssertSuccess());
     idmApiMock.resetAll();
-    envs.set(ENVVAR_IDM_CONTRACT_URL, idmApiMock.baseUrl());
+    IdmClientFactory.setIdmClientConfig(
+        new IdmClientConfig.Builder().idmContractUrl(idmApiMock.baseUrl()).build());
   }
 
   @After
@@ -200,8 +198,7 @@ public class IdmConnectContractApiTransmitIT {
 
   @Test
   public void testStatusUpdateOnFailedTransmitNoEnvVar() {
-    envs.set(ENVVAR_IDM_CONTRACT_URL, null);
-    assertThat(System.getenv(ENVVAR_IDM_CONTRACT_URL)).isNull();
+    IdmClientFactory.setIdmClientConfig(new IdmClientConfig.Builder().build());
     int expectedStatusCode = 500;
 
     given().get(PATH_TRANSMIT, DRAFT.getId()).then().statusCode(expectedStatusCode);
@@ -214,8 +211,9 @@ public class IdmConnectContractApiTransmitIT {
 
   @Test
   public void testIdmApiNotAvailable() {
-    String unvailableUrl = HOST + ":" + NetworkUtils.nextFreePort();
-    envs.set(ENVVAR_IDM_CONTRACT_URL, unvailableUrl);
+    String unavailableUrl = HOST + ":" + NetworkUtils.nextFreePort();
+    IdmClientFactory.setIdmClientConfig(
+        new IdmClientConfig.Builder().idmContractUrl(unavailableUrl).build());
 
     // POST
     given()

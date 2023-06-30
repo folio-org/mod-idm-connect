@@ -8,12 +8,18 @@ public class IdmClientFactory {
 
   private static WebClient webClientInstance;
 
+  private static IdmClientConfig idmClientConfig = null;
+
   private IdmClientFactory() {}
 
   public static IdmClient create() {
-    IdmClientConfig idmClientConfig = IdmClientConfig.createFromEnvVars();
+    IdmClientConfig config =
+        (idmClientConfig == null) ? IdmClientConfig.createFromEnvVars() : idmClientConfig;
+    return new IdmClientImpl(config, getWebClientInstance(config));
+  }
 
-    return new IdmClientImpl(idmClientConfig, getWebClientInstance(idmClientConfig));
+  public static void setIdmClientConfig(IdmClientConfig idmClientConfig) {
+    IdmClientFactory.idmClientConfig = idmClientConfig;
   }
 
   private static WebClient getWebClientInstance(IdmClientConfig idmClientConfig) {
