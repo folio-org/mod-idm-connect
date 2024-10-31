@@ -13,7 +13,7 @@
           ],
           "pathPattern": "/idm-connect/contract",
           "permissionsRequired": [
-            "idmconnect.contract.get"
+            "idmconnect.contract.collection.get"
           ]
         },
         {
@@ -22,7 +22,7 @@
           ],
           "pathPattern": "/idm-connect/contract",
           "permissionsRequired": [
-            "idmconnect.contract.post"
+            "idmconnect.contract.item.post"
           ]
         },
         {
@@ -31,7 +31,7 @@
           ],
           "pathPattern": "/idm-connect/contract/bulk-delete",
           "permissionsRequired": [
-            "idmconnect.contract.bulk-delete"
+            "idmconnect.contract.bulk-delete.collection.post"
           ]
         },
         {
@@ -40,7 +40,7 @@
           ],
           "pathPattern": "/idm-connect/contract/{id}",
           "permissionsRequired": [
-            "idmconnect.contract.get"
+            "idmconnect.contract.item.get"
           ]
         },
         {
@@ -49,7 +49,7 @@
           ],
           "pathPattern": "/idm-connect/contract/{id}",
           "permissionsRequired": [
-            "idmconnect.contract.put"
+            "idmconnect.contract.item.put"
           ]
         },
         {
@@ -58,7 +58,7 @@
           ],
           "pathPattern": "/idm-connect/contract/{id}",
           "permissionsRequired": [
-            "idmconnect.contract.delete"
+            "idmconnect.contract.item.delete"
           ]
         },
         {
@@ -67,7 +67,7 @@
           ],
           "pathPattern": "/idm-connect/contract/{id}/transmit",
           "permissionsRequired": [
-            "idmconnect.contract.transmit.get"
+            "idmconnect.contract.item.transmit.item.get"
           ]
         },
         {
@@ -76,18 +76,25 @@
           ],
           "pathPattern": "/idm-connect/searchidm",
           "permissionsRequired": [
-            "idmconnect.searchidm.get"
+            "idmconnect.searchidm.collection.get"
           ]
         },
         {
           "methods": [
-            "POST",
+            "POST"
+          ],
+          "pathPattern": "/idm-connect/ubreadernumber",
+          "permissionsRequired": [
+            "idmconnect.ubreadernumber.item.post"
+          ]
+        },
+        {
+          "methods": [
             "DELETE"
           ],
           "pathPattern": "/idm-connect/ubreadernumber",
           "permissionsRequired": [
-            "idmconnect.ubreadernumber.post",
-            "idmconnect.ubreadernumber.delete"
+            "idmconnect.ubreadernumber.item.delete"
           ]
         }
       ]
@@ -115,48 +122,53 @@
   ],
   "permissionSets": [
     {
-      "permissionName": "idmconnect.contract.get",
-      "displayName": "idmconnect contract get",
+      "permissionName": "idmconnect.contract.collection.get",
+      "displayName": "idmconnect contract collection get",
       "description": "View contracts"
     },
     {
-      "permissionName": "idmconnect.contract.post",
-      "displayName": "idmconnect contract create",
-      "description": "Create contracts"
+      "permissionName": "idmconnect.contract.item.get",
+      "displayName": "idmconnect contract item get",
+      "description": "View contract by id"
     },
     {
-      "permissionName": "idmconnect.contract.put",
-      "displayName": "idmconnect contract put",
-      "description": "Edit contracts"
+      "permissionName": "idmconnect.contract.item.post",
+      "displayName": "idmconnect contract item post",
+      "description": "Create contract"
     },
     {
-      "permissionName": "idmconnect.contract.delete",
-      "displayName": "idmconnect contract delete",
-      "description": "Delete contracts"
+      "permissionName": "idmconnect.contract.item.put",
+      "displayName": "idmconnect contract item put",
+      "description": "Edit contract"
     },
     {
-      "permissionName": "idmconnect.contract.transmit.get",
-      "displayName": "idmconnect contract transmit get",
+      "permissionName": "idmconnect.contract.item.delete",
+      "displayName": "idmconnect contract item delete",
+      "description": "Delete contract"
+    },
+    {
+      "permissionName": "idmconnect.contract.item.transmit.item.get",
+      "displayName": "idmconnect contract item transmit item get",
       "description": "Transmit contract to IDM and update local contract status"
     },
     {
-      "permissionName": "idmconnect.contract.bulk-delete",
-      "displayName": "idmconnect contract bulk-delete",
+      "permissionName": "idmconnect.contract.bulk-delete.collection.post",
+      "displayName": "idmconnect contract bulk-delete collection post",
       "description": "Delete multiple contracts in bulk"
     },
     {
-      "permissionName": "idmconnect.searchidm.get",
-      "displayName": "idmconnect searchidm get",
+      "permissionName": "idmconnect.searchidm.collection.get",
+      "displayName": "idmconnect searchidm collection get",
       "description": "Search external IDM system"
     },
     {
-      "permissionName": "idmconnect.ubreadernumber.post",
-      "displayName": "idmconnect ubreadernumber post",
+      "permissionName": "idmconnect.ubreadernumber.item.post",
+      "displayName": "idmconnect ubreadernumber item post",
       "description": "Post ubreadernumber to external IDM system and update local contract"
     },
     {
-      "permissionName": "idmconnect.ubreadernumber.delete",
-      "displayName": "idmconnect ubreadernumber delete",
+      "permissionName": "idmconnect.ubreadernumber.item.delete",
+      "displayName": "idmconnect ubreadernumber item delete",
       "description": "Delete ubreadernumber from external IDM system and update local contract"
     },
     {
@@ -164,12 +176,13 @@
       "displayName": "idmconnect contract all",
       "description": "All permissions related to contracts",
       "subPermissions": [
-        "idmconnect.contract.get",
-        "idmconnect.contract.post",
-        "idmconnect.contract.put",
-        "idmconnect.contract.delete",
-        "idmconnect.contract.bulk-delete",
-        "idmconnect.contract.transmit.get"
+        "idmconnect.contract.bulk-delete.collection.post",
+        "idmconnect.contract.collection.get",
+        "idmconnect.contract.item.delete",
+        "idmconnect.contract.item.get",
+        "idmconnect.contract.item.post",
+        "idmconnect.contract.item.put",
+        "idmconnect.contract.item.transmit.item.get"
       ]
     },
     {
@@ -177,7 +190,7 @@
       "displayName": "idmconnect searchidm all",
       "description": "All permissions related to searchidm",
       "subPermissions": [
-        "idmconnect.searchidm.get"
+        "idmconnect.searchidm.collection.get"
       ]
     },
     {
@@ -185,8 +198,8 @@
       "displayName": "idmconnect ubreadernumber all",
       "description": "All permissions related to ubreadernumber",
       "subPermissions": [
-        "idmconnect.ubreadernumber.post",
-        "idmconnect.ubreadernumber.delete"
+        "idmconnect.ubreadernumber.item.delete",
+        "idmconnect.ubreadernumber.item.post"
       ]
     },
     {
@@ -195,8 +208,8 @@
       "description": "All permissions for the idm-connect module",
       "subPermissions": [
         "idmconnect.contract.all",
-        "idmconnect.searchidm.all",
-        "idmconnect.ubreadernumber.all"
+        "idmconnect.ubreadernumber.all",
+        "idmconnect.searchidm.all"
       ]
     }
   ],

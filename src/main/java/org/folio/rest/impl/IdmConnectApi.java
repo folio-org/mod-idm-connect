@@ -41,9 +41,9 @@ public class IdmConnectApi implements IdmConnect {
   @Override
   public void getIdmConnectContract(
       String query,
+      String totalRecords,
       int offset,
       int limit,
-      String lang,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
@@ -62,7 +62,6 @@ public class IdmConnectApi implements IdmConnect {
 
   @Override
   public void postIdmConnectContract(
-      String lang,
       Contract entity,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
@@ -79,7 +78,6 @@ public class IdmConnectApi implements IdmConnect {
   @Override
   public void getIdmConnectContractById(
       String id,
-      String lang,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
@@ -96,7 +94,6 @@ public class IdmConnectApi implements IdmConnect {
   @Override
   public void deleteIdmConnectContractById(
       String id,
-      String lang,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
@@ -192,7 +189,6 @@ public class IdmConnectApi implements IdmConnect {
   @Override
   public void putIdmConnectContractById(
       String id,
-      String lang,
       Contract entity,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
