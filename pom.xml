@@ -18,10 +18,11 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>17</maven.compiler.release>
-    <rmb.version>35.2.0</rmb.version>
-    <vertx.version>4.5.4</vertx.version>
-    <aspect.version>1.9.21.1</aspect.version>
+    <rmb.version>35.3.0</rmb.version>
+    <vertx.version>4.5.10</vertx.version>
+    <aspect.version>1.9.22.1</aspect.version>
     <aspectj-maven-plugin.version>1.14</aspectj-maven-plugin.version>
+    <log4j-bom.version>2.24.1</log4j-bom.version>
   </properties>
 
   <dependencyManagement>
@@ -29,7 +30,7 @@
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-bom</artifactId>
-        <version>2.20.0</version>
+        <version>${log4j-bom.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
