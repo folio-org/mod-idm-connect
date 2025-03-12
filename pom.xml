@@ -15,7 +15,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.release>21</maven.compiler.release>
     <rmb.version>35.3.0</rmb.version>
     <vertx.version>4.5.10</vertx.version>
     <aspect.version>1.9.22.1</aspect.version>
