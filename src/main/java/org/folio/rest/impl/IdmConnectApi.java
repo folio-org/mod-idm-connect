@@ -23,7 +23,6 @@ import java.util.stream.Stream;
 import javax.ws.rs.core.Response;
 import org.folio.idmconnect.IdmClient;
 import org.folio.idmconnect.IdmClientFactory;
-import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.jaxrs.model.BulkDeleteRequest;
 import org.folio.rest.jaxrs.model.BulkDeleteResponse;
 import org.folio.rest.jaxrs.model.Contract;
@@ -170,7 +169,7 @@ public class IdmConnectApi implements IdmConnect {
                             }))
             .collect(Collectors.toList());
 
-    CompositeFuture join = GenericCompositeFuture.join(results);
+    CompositeFuture join = Future.join(results);
     join.onComplete(
         ar -> {
           List<String> failedUUIDs =
