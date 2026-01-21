@@ -24,10 +24,7 @@ import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Contract;
 import org.folio.rest.jaxrs.model.Contracts;
-import org.folio.rest.jaxrs.model.Parameter;
-import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.tools.utils.VertxUtils;
 import org.folio.utils.TenantUtil;
@@ -75,7 +72,7 @@ public class CustomTenantApiIT {
   @Test
   public void testWithoutLoadSampleAttribute(TestContext context) {
     tenantUtil
-        .setupTenant(new TenantAttributes().withModuleTo(ModuleName.getModuleVersion()))
+        .setupTenant(false)
         .map(
             v -> {
               Contracts getResult = given().get().then().extract().as(Contracts.class);
@@ -93,10 +90,7 @@ public class CustomTenantApiIT {
   @Test
   public void testWithLoadSampleAttribute(TestContext context) {
     tenantUtil
-        .setupTenant(
-            new TenantAttributes()
-                .withModuleTo(ModuleName.getModuleVersion())
-                .withParameters(List.of(new Parameter().withKey("loadSample").withValue("true"))))
+        .setupTenant(true)
         .map(
             v -> {
               Contracts getResult = given().get().then().extract().as(Contracts.class);

@@ -36,9 +36,7 @@ import org.folio.rest.jaxrs.model.Contract;
 import org.folio.rest.jaxrs.model.Contract.Status;
 import org.folio.rest.jaxrs.model.Contracts;
 import org.folio.rest.jaxrs.model.Personal;
-import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.tools.utils.VertxUtils;
 import org.folio.utils.TenantUtil;
@@ -85,9 +83,7 @@ public class IdmConnectContractApiIT {
 
   @Before
   public void setUp(TestContext context) {
-    tenantUtil
-        .setupTenant(new TenantAttributes().withModuleTo(ModuleName.getModuleVersion()))
-        .onComplete(context.asyncAssertSuccess());
+    tenantUtil.setupTenant(false).onComplete(context.asyncAssertSuccess());
   }
 
   @After
