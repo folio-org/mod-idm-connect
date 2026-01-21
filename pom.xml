@@ -24,6 +24,7 @@
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
     <spotless.version>3.1.0</spotless.version>
     <google-java-format.version>1.33.0</google-java-format.version>
+    <junit.version>5.11.4</junit.version>
   </properties>
 
   <dependencyManagement>
@@ -39,6 +40,13 @@
         <groupId>io.vertx</groupId>
         <artifactId>vertx-stack-depchain</artifactId>
         <version>${vertx.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${junit.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -83,6 +91,16 @@
       <groupId>org.wiremock</groupId>
       <artifactId>wiremock</artifactId>
       <version>3.12.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

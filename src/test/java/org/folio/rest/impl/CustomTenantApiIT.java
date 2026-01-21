@@ -5,24 +5,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.utils.TestConstants.HOST;
 import static org.folio.utils.TestConstants.IDM_TOKEN;
 import static org.folio.utils.TestConstants.TENANT;
+import static org.folio.utils.TestConstants.deployRestVerticle;
 import static org.folio.utils.TestConstants.setupRestAssured;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.io.Resources;
 import io.restassured.RestAssured;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.json.jackson.JacksonCodec;
+import io.vertx.core.json.Json;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import org.folio.postgres.testing.PostgresTesterContainer;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Contract;
 import org.folio.rest.jaxrs.model.Contracts;
@@ -53,7 +51,7 @@ public class CustomTenantApiIT {
 
     String exampleContractsStr =
         Resources.toString(Resources.getResource("examplecontracts.json"), StandardCharsets.UTF_8);
-    exampleContracts = JacksonCodec.decodeValue(exampleContractsStr, new TypeReference<>() {});
+    exampleContracts = Arrays.asList(Json.decodeValue(exampleContractsStr, Contract[].class));
 
     tenantUtil =
         new TenantUtil(
@@ -61,10 +59,7 @@ public class CustomTenantApiIT {
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     PostgresClient.getInstance(vertx);
 
-    DeploymentOptions options =
-        new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
-
-    vertx.deployVerticle(RestVerticle.class.getName(), options, context.asyncAssertSuccess());
+    deployRestVerticle(vertx, port).onComplete(context.asyncAssertSuccess());
   }
 
   @AfterClass

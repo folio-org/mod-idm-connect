@@ -22,6 +22,7 @@ import static org.folio.utils.TestConstants.IDM_TOKEN;
 import static org.folio.utils.TestConstants.OKAPI_HEADERS;
 import static org.folio.utils.TestConstants.PATH_ID;
 import static org.folio.utils.TestConstants.TENANT;
+import static org.folio.utils.TestConstants.deployRestVerticle;
 import static org.folio.utils.TestConstants.setupRestAssured;
 import static org.hamcrest.Matchers.containsString;
 
@@ -30,9 +31,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.restassured.RestAssured;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
@@ -40,7 +39,6 @@ import java.util.Map;
 import org.folio.idmconnect.IdmClientConfig;
 import org.folio.idmconnect.IdmClientFactory;
 import org.folio.postgres.testing.PostgresTesterContainer;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Contract;
 import org.folio.rest.persist.PostgresClient;
@@ -93,9 +91,7 @@ public class IdmConnectUBReaderNumberApiIT {
         new TenantUtil(
             new TenantClient(HOST + ":" + port, TENANT, IDM_TOKEN, WebClient.create(vertx)));
 
-    DeploymentOptions options =
-        new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
-    vertx.deployVerticle(RestVerticle.class.getName(), options, context.asyncAssertSuccess());
+    deployRestVerticle(vertx, port).onComplete(context.asyncAssertSuccess());
 
     idmApiMock.stubFor(
         any(urlPathEqualTo(MOCK_BASE_PATH))
