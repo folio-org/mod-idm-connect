@@ -16,14 +16,15 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
-    <rmb.version>35.4.0</rmb.version>
-    <vertx.version>4.5.13</vertx.version>
+    <rmb.version>36.0.0-SNAPSHOT</rmb.version>
+    <vertx.version>5.0.6</vertx.version>
     <aspect.version>1.9.22.1</aspect.version>
     <aspectj-maven-plugin.version>1.14</aspectj-maven-plugin.version>
     <log4j-bom.version>2.24.3</log4j-bom.version>
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
     <spotless.version>3.1.0</spotless.version>
     <google-java-format.version>1.33.0</google-java-format.version>
+    <junit.version>5.11.4</junit.version>
   </properties>
 
   <dependencyManagement>
@@ -39,6 +40,13 @@
         <groupId>io.vertx</groupId>
         <artifactId>vertx-stack-depchain</artifactId>
         <version>${vertx.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${junit.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -83,6 +91,16 @@
       <groupId>org.wiremock</groupId>
       <artifactId>wiremock</artifactId>
       <version>3.12.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -188,7 +206,7 @@
         <configuration>
           <verbose>true</verbose>
           <showWeaveInfo>false</showWeaveInfo>
-          <complianceLevel>17</complianceLevel>
+          <complianceLevel>${maven.compiler.release}</complianceLevel>
           <XaddSerialVersionUID>true</XaddSerialVersionUID>
           <aspectLibraries>
             <aspectLibrary>

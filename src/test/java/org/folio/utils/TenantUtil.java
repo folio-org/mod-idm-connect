@@ -68,7 +68,9 @@ public class TenantUtil {
 
   public Future<Void> setupTenant(boolean loadSample) {
     return setupTenant(
-        new TenantAttributes().withModuleTo(ModuleName.getModuleVersion()), loadSample);
+        new TenantAttributes()
+            .withModuleTo(ModuleName.getModuleName() + "-" + ModuleName.getModuleVersion()),
+        loadSample);
   }
 
   public Future<Void> setupTenant(TenantAttributes tenantAttributes) {

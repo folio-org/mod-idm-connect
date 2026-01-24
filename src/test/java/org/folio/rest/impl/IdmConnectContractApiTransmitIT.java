@@ -16,6 +16,7 @@ import static org.folio.utils.TestConstants.IDM_TOKEN;
 import static org.folio.utils.TestConstants.PATH_ID;
 import static org.folio.utils.TestConstants.PATH_TRANSMIT;
 import static org.folio.utils.TestConstants.TENANT;
+import static org.folio.utils.TestConstants.deployRestVerticle;
 import static org.folio.utils.TestConstants.setupRestAssured;
 import static org.folio.utils.TestEntities.DRAFT;
 import static org.folio.utils.TestEntities.PENDING;
@@ -30,16 +31,13 @@ import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import io.restassured.RestAssured;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
 import org.folio.idmconnect.IdmClientConfig;
 import org.folio.idmconnect.IdmClientFactory;
 import org.folio.postgres.testing.PostgresTesterContainer;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Contract;
 import org.folio.rest.persist.PostgresClient;
@@ -75,10 +73,7 @@ public class IdmConnectContractApiTransmitIT {
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     PostgresClient.getInstance(vertx);
 
-    DeploymentOptions options =
-        new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
-
-    vertx.deployVerticle(RestVerticle.class.getName(), options, context.asyncAssertSuccess());
+    deployRestVerticle(vertx, port).onComplete(context.asyncAssertSuccess());
   }
 
   @AfterClass

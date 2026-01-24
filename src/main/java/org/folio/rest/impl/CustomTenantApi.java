@@ -2,11 +2,10 @@ package org.folio.rest.impl;
 
 import static org.folio.idmconnect.Constants.TABLE_NAME_CONTRACTS;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.io.Resources;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.json.jackson.JacksonCodec;
+import io.vertx.core.json.Json;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -34,7 +33,7 @@ public class CustomTenantApi extends TenantAPI {
                   String contractsStr =
                       Resources.toString(
                           Resources.getResource("examplecontracts.json"), StandardCharsets.UTF_8);
-                  contracts = JacksonCodec.decodeValue(contractsStr, new TypeReference<>() {});
+                  contracts = List.of(Json.decodeValue(contractsStr, Contract[].class));
                   MetadataUtil.populateMetadata(contracts, headers);
                 } catch (IOException | ReflectiveOperationException e) {
                   return Future.failedFuture(e);

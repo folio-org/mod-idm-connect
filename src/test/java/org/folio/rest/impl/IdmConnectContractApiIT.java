@@ -9,6 +9,7 @@ import static org.folio.utils.TestConstants.HOST;
 import static org.folio.utils.TestConstants.IDM_TOKEN;
 import static org.folio.utils.TestConstants.PATH_ID;
 import static org.folio.utils.TestConstants.TENANT;
+import static org.folio.utils.TestConstants.deployRestVerticle;
 import static org.folio.utils.TestConstants.setupRestAssured;
 import static org.folio.utils.TestEntities.DRAFT;
 import static org.folio.utils.TestEntities.PENDING;
@@ -18,10 +19,8 @@ import static org.folio.utils.TestEntities.UPDATED;
 
 import com.google.common.io.Resources;
 import io.restassured.RestAssured;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
@@ -30,7 +29,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import org.folio.postgres.testing.PostgresTesterContainer;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.BulkDeleteRequest;
 import org.folio.rest.jaxrs.model.BulkDeleteResponse;
@@ -38,9 +36,7 @@ import org.folio.rest.jaxrs.model.Contract;
 import org.folio.rest.jaxrs.model.Contract.Status;
 import org.folio.rest.jaxrs.model.Contracts;
 import org.folio.rest.jaxrs.model.Personal;
-import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.tools.utils.VertxUtils;
 import org.folio.utils.TenantUtil;
@@ -77,10 +73,7 @@ public class IdmConnectContractApiIT {
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     PostgresClient.getInstance(vertx);
 
-    DeploymentOptions options =
-        new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
-
-    vertx.deployVerticle(RestVerticle.class.getName(), options, context.asyncAssertSuccess());
+    deployRestVerticle(vertx, port).onComplete(context.asyncAssertSuccess());
   }
 
   @AfterClass
@@ -90,9 +83,7 @@ public class IdmConnectContractApiIT {
 
   @Before
   public void setUp(TestContext context) {
-    tenantUtil
-        .setupTenant(new TenantAttributes().withModuleTo(ModuleName.getModuleVersion()))
-        .onComplete(context.asyncAssertSuccess());
+    tenantUtil.setupTenant(false).onComplete(context.asyncAssertSuccess());
   }
 
   @After

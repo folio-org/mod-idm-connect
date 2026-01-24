@@ -7,7 +7,12 @@ import static org.folio.idmconnect.Constants.BASE_PATH_CONTRACTS;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.parsing.Parser;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import java.util.Map;
+import org.folio.rest.RestVerticle;
 
 public class TestConstants {
 
@@ -34,6 +39,12 @@ public class TestConstants {
             .addHeaders(OKAPI_HEADERS)
             .addHeader(CONTENT_TYPE, APPLICATION_JSON)
             .build();
+  }
+
+  public static Future<String> deployRestVerticle(Vertx vertx, int port) {
+    DeploymentOptions options =
+        new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
+    return vertx.deployVerticle(RestVerticle.class.getName(), options);
   }
 
   private TestConstants() {}

@@ -13,21 +13,19 @@ import static org.folio.idmconnect.Constants.MSG_IDM_URL_NOT_SET;
 import static org.folio.utils.TestConstants.CONNECTION_REFUSED;
 import static org.folio.utils.TestConstants.HOST;
 import static org.folio.utils.TestConstants.IDM_TOKEN;
+import static org.folio.utils.TestConstants.deployRestVerticle;
 import static org.folio.utils.TestConstants.setupRestAssured;
 import static org.hamcrest.Matchers.containsString;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.restassured.RestAssured;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import java.util.Map;
 import org.folio.idmconnect.IdmClientConfig;
 import org.folio.idmconnect.IdmClientFactory;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.tools.utils.VertxUtils;
 import org.junit.AfterClass;
@@ -51,9 +49,7 @@ public class IdmConnectSearchidmApiIT {
     int port = NetworkUtils.nextFreePort();
     setupRestAssured(port, BASE_PATH_SEARCHIDM);
 
-    DeploymentOptions options =
-        new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
-    vertx.deployVerticle(RestVerticle.class.getName(), options, context.asyncAssertSuccess());
+    deployRestVerticle(vertx, port).onComplete(context.asyncAssertSuccess());
 
     IDM_MOCK_URL = idmApiMock.baseUrl() + BASE_PATH_SEARCHIDM;
     idmApiMock.stubFor(
