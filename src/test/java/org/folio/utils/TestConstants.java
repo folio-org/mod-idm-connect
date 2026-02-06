@@ -11,6 +11,12 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import java.io.IOException;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.SocketAddress;
+import java.net.URI;
+import java.util.List;
 import java.util.Map;
 import org.folio.rest.RestVerticle;
 
@@ -45,6 +51,20 @@ public class TestConstants {
     DeploymentOptions options =
         new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
     return vertx.deployVerticle(RestVerticle.class.getName(), options);
+  }
+
+  public static ProxySelector createProxySelector(Proxy proxy) {
+    return new ProxySelector() {
+      @Override
+      public List<Proxy> select(URI uri) {
+        return List.of(proxy);
+      }
+
+      @Override
+      public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+        // No-op for test
+      }
+    };
   }
 
   private TestConstants() {}
