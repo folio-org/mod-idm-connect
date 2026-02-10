@@ -17,17 +17,27 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.net.ProxyOptions;
+import io.vertx.core.net.ProxyType;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.URI;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 import javax.ws.rs.core.Response;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.Contract;
 
 public class IdmClientImpl implements IdmClient {
+
+  private static final Logger LOG = LogManager.getLogger(IdmClientImpl.class);
 
   private final String idmUrl;
   private final String idmContractUrl;
@@ -75,6 +85,7 @@ public class IdmClientImpl implements IdmClient {
   private HttpRequest<Buffer> createIdmRequest(
       HttpMethod httpMethod, String requestUri, Map<String, Optional<String>> queryParams) {
     HttpRequest<Buffer> bufferHttpRequest = webClient.requestAbs(httpMethod, requestUri);
+    getProxyOptions(requestUri).ifPresent(bufferHttpRequest::proxy);
     if (idmToken != null) {
       bufferHttpRequest.putHeader(AUTHORIZATION, idmToken);
     }
@@ -148,5 +159,39 @@ public class IdmClientImpl implements IdmClient {
                     .send()
                     .transform(this::toResponseFuture))
         .orElse(succeededFuture(createResponse(MSG_IDM_READER_NUMBER_URL_NOT_SET)));
+  }
+
+  /**
+   * Creates Vert.x ProxyOptions from the system proxy configuration for the given URL. This method
+   * uses ProxySelector.getDefault() to obtain proxy settings.
+   *
+   * @param targetUrl the target URL to check for proxy configuration
+   * @return Optional containing ProxyOptions if a proxy is configured, empty otherwise
+   */
+  static Optional<ProxyOptions> getProxyOptions(String targetUrl) {
+    if (targetUrl == null || targetUrl.isEmpty()) {
+      return Optional.empty();
+    }
+    try {
+      return ProxySelector.getDefault().select(new URI(targetUrl)).stream()
+          .filter(p -> p.type() == Proxy.Type.HTTP)
+          .findFirst()
+          .map(
+              proxy -> {
+                InetSocketAddress addr = (InetSocketAddress) proxy.address();
+                LOG.debug(
+                    "HTTP Proxy configured for {}: {}:{}",
+                    targetUrl,
+                    addr.getHostString(),
+                    addr.getPort());
+                return new ProxyOptions()
+                    .setHost(addr.getHostString())
+                    .setPort(addr.getPort())
+                    .setType(ProxyType.HTTP);
+              });
+    } catch (Exception e) {
+      LOG.error("Error resolving proxy for {}: {}", targetUrl, e.getMessage());
+      return Optional.empty();
+    }
   }
 }
