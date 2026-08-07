@@ -1,3 +1,6 @@
+# 1.3.0 (IN PROGRESS)
+* [MODIDM-31](https://folio-org.atlassian.net/browse/MODIDM-31) Remove optional `version` property from RAML files
+
 # 1.2.0
 * [MODIDM-27](https://folio-org.atlassian.net/browse/MODIDM-27) Upgrade module to Vert.x 5
 * [MODIDM-28](https://folio-org.atlassian.net/browse/MODIDM-28) Add HTTP proxy support to IdmClientImpl
