@@ -1,4 +1,5 @@
 # 1.3.0 (IN PROGRESS)
+* [MODIDM-32](https://folio-org.atlassian.net/browse/MODIDM-32) Fix event loop deadlock in integration tests
 * [MODIDM-31](https://folio-org.atlassian.net/browse/MODIDM-31) Remove optional `version` property from RAML files
 
 # 1.2.0
