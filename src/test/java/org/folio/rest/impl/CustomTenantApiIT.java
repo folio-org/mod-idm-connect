@@ -10,9 +10,9 @@ import static org.folio.utils.TestConstants.setupRestAssured;
 
 import com.google.common.io.Resources;
 import io.restassured.RestAssured;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
@@ -71,41 +71,36 @@ public class CustomTenantApiIT {
 
   @Test
   public void testWithoutLoadSampleAttribute(TestContext context) {
-    tenantUtil
-        .setupTenant(false)
-        .map(
-            v -> {
-              Contracts getResult = given().get().then().extract().as(Contracts.class);
-              assertThat(getResult)
-                  .satisfies(
-                      contracts -> {
-                        assertThat(contracts.getTotalRecords()).isZero();
-                        assertThat(contracts.getContracts()).isEmpty();
-                      });
-              return Future.succeededFuture();
-            })
-        .onComplete(context.asyncAssertSuccess());
+    // await on the test thread, as the blocking calls below must not run on an event loop thread
+    Async async = context.async();
+    tenantUtil.setupTenant(false).onComplete(context.asyncAssertSuccess(v -> async.complete()));
+    async.awaitSuccess();
+
+    Contracts getResult = given().get().then().extract().as(Contracts.class);
+    assertThat(getResult)
+        .satisfies(
+            contracts -> {
+              assertThat(contracts.getTotalRecords()).isZero();
+              assertThat(contracts.getContracts()).isEmpty();
+            });
   }
 
   @Test
   public void testWithLoadSampleAttribute(TestContext context) {
-    tenantUtil
-        .setupTenant(true)
-        .map(
-            v -> {
-              Contracts getResult = given().get().then().extract().as(Contracts.class);
-              assertThat(getResult)
-                  .satisfies(
-                      contracts -> {
-                        assertThat(contracts.getTotalRecords()).isEqualTo(20);
-                        assertThat(contracts.getContracts()).hasSize(10);
-                        assertThat(contracts.getContracts())
-                            .usingRecursiveFieldByFieldElementComparatorIgnoringFields(
-                                "metadata", "version")
-                            .isSubsetOf(exampleContracts);
-                      });
-              return Future.succeededFuture();
-            })
-        .onComplete(context.asyncAssertSuccess());
+    // await on the test thread, as the blocking calls below must not run on an event loop thread
+    Async async = context.async();
+    tenantUtil.setupTenant(true).onComplete(context.asyncAssertSuccess(v -> async.complete()));
+    async.awaitSuccess();
+
+    Contracts getResult = given().get().then().extract().as(Contracts.class);
+    assertThat(getResult)
+        .satisfies(
+            contracts -> {
+              assertThat(contracts.getTotalRecords()).isEqualTo(20);
+              assertThat(contracts.getContracts()).hasSize(10);
+              assertThat(contracts.getContracts())
+                  .usingRecursiveFieldByFieldElementComparatorIgnoringFields("metadata", "version")
+                  .isSubsetOf(exampleContracts);
+            });
   }
 }

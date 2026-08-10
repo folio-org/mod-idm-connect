@@ -1,7 +1,6 @@
 package org.folio.rest.impl;
 
 import static io.restassured.RestAssured.given;
-import static io.vertx.core.Future.succeededFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Index.atIndex;
 import static org.folio.idmconnect.Constants.PATH_BULK_DELETE;
@@ -21,6 +20,7 @@ import com.google.common.io.Resources;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
@@ -216,49 +216,44 @@ public class IdmConnectContractApiIT {
 
   @Test
   public void testThatBulkDeleteSucceeds(TestContext context) {
-    tenantUtil
-        .setupTenant(true) // load sample data
-        .map(
-            v -> {
-              String NON_EXISTING_ID = "d4ef9cd7-e57c-4708-bf5a-fba64f622e82";
-              String INVALID_ID = "'5c551294-e387-4de2-92d2-5cfe4fa8788d'";
-              List<String> uuids =
-                  List.of(
-                      DRAFT.getId(),
-                      UPDATED.getId(),
-                      TRANSMISSION_ERROR.getId(),
-                      TRANSMISSION_ERROR_EDIT.getId(),
-                      PENDING.getId(),
-                      NON_EXISTING_ID, // not present in sample data
-                      INVALID_ID // invalid UUID
-                      );
-              uuids.stream()
-                  .limit(5)
-                  .forEach(id -> given().get(PATH_ID, id).then().statusCode(200));
+    // load sample data; await on the test thread, as the blocking calls below must not run on an
+    // event loop thread
+    Async async = context.async();
+    tenantUtil.setupTenant(true).onComplete(context.asyncAssertSuccess(v -> async.complete()));
+    async.awaitSuccess();
 
-              assertThat(
-                      given()
-                          .body(new BulkDeleteRequest().withUuids(uuids))
-                          .post(PATH_BULK_DELETE)
-                          .then()
-                          .statusCode(200)
-                          .extract()
-                          .as(BulkDeleteResponse.class))
-                  .satisfies(
-                      resp -> {
-                        assertThat(resp.getRequested()).isEqualTo(7);
-                        assertThat(resp.getDeleted()).isEqualTo(5);
-                        assertThat(resp.getFailed()).isEqualTo(2);
-                        assertThat(resp.getFailedItems())
-                            .containsExactlyInAnyOrder(NON_EXISTING_ID, INVALID_ID);
-                      });
+    String NON_EXISTING_ID = "d4ef9cd7-e57c-4708-bf5a-fba64f622e82";
+    String INVALID_ID = "'5c551294-e387-4de2-92d2-5cfe4fa8788d'";
+    List<String> uuids =
+        List.of(
+            DRAFT.getId(),
+            UPDATED.getId(),
+            TRANSMISSION_ERROR.getId(),
+            TRANSMISSION_ERROR_EDIT.getId(),
+            PENDING.getId(),
+            NON_EXISTING_ID, // not present in sample data
+            INVALID_ID // invalid UUID
+            );
+    uuids.stream().limit(5).forEach(id -> given().get(PATH_ID, id).then().statusCode(200));
 
-              uuids.stream()
-                  .limit(6)
-                  .forEach(id -> given().get(PATH_ID, id).then().statusCode(404));
-              return succeededFuture();
-            })
-        .onComplete(context.asyncAssertSuccess());
+    assertThat(
+            given()
+                .body(new BulkDeleteRequest().withUuids(uuids))
+                .post(PATH_BULK_DELETE)
+                .then()
+                .statusCode(200)
+                .extract()
+                .as(BulkDeleteResponse.class))
+        .satisfies(
+            resp -> {
+              assertThat(resp.getRequested()).isEqualTo(7);
+              assertThat(resp.getDeleted()).isEqualTo(5);
+              assertThat(resp.getFailed()).isEqualTo(2);
+              assertThat(resp.getFailedItems())
+                  .containsExactlyInAnyOrder(NON_EXISTING_ID, INVALID_ID);
+            });
+
+    uuids.stream().limit(6).forEach(id -> given().get(PATH_ID, id).then().statusCode(404));
   }
 
   @Test
@@ -277,16 +272,15 @@ public class IdmConnectContractApiIT {
 
   @Test
   public void testThatDeleteIsOnlyPossibleForDraftStatus(TestContext context) {
-    tenantUtil
-        .setupTenant(true) // load sample data
-        .map(
-            v -> {
-              for (TestEntities entity : TestEntities.values()) {
-                int expectedStatusCode = entity.getInitialStatus().equals(Status.DRAFT) ? 204 : 400;
-                given().delete(PATH_ID, entity.getId()).then().statusCode(expectedStatusCode);
-              }
-              return succeededFuture();
-            })
-        .onComplete(context.asyncAssertSuccess());
+    // load sample data; await on the test thread, as the blocking calls below must not run on an
+    // event loop thread
+    Async async = context.async();
+    tenantUtil.setupTenant(true).onComplete(context.asyncAssertSuccess(v -> async.complete()));
+    async.awaitSuccess();
+
+    for (TestEntities entity : TestEntities.values()) {
+      int expectedStatusCode = entity.getInitialStatus().equals(Status.DRAFT) ? 204 : 400;
+      given().delete(PATH_ID, entity.getId()).then().statusCode(expectedStatusCode);
+    }
   }
 }
