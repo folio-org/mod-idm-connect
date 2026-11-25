@@ -2,6 +2,7 @@
 * [MODIDM-32](https://folio-org.atlassian.net/browse/MODIDM-32) Fix event loop deadlock in integration tests
 * Bind `spotless:check` goal to `verify` phase and remove `ratchetFrom` setting
 * [MODIDM-31](https://folio-org.atlassian.net/browse/MODIDM-31) Remove optional `version` property from RAML files
+* [MODIDM-33](https://folio-org.atlassian.net/browse/MODIDM-33) Make `TenantUtil` blocking to prevent event loop deadlocks in integration tests
 
 # 1.2.0
 * [MODIDM-27](https://folio-org.atlassian.net/browse/MODIDM-27) Upgrade module to Vert.x 5

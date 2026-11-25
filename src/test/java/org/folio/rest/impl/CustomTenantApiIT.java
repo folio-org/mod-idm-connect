@@ -12,7 +12,6 @@ import com.google.common.io.Resources;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
-import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
@@ -65,16 +64,13 @@ public class CustomTenantApiIT {
   }
 
   @After
-  public void tearDown(TestContext context) {
-    tenantUtil.teardownTenant().onComplete(context.asyncAssertSuccess());
+  public void tearDown() {
+    tenantUtil.teardownTenant();
   }
 
   @Test
-  public void testWithoutLoadSampleAttribute(TestContext context) {
-    // await on the test thread, as the blocking calls below must not run on an event loop thread
-    Async async = context.async();
-    tenantUtil.setupTenant(false).onComplete(context.asyncAssertSuccess(v -> async.complete()));
-    async.awaitSuccess();
+  public void testWithoutLoadSampleAttribute() {
+    tenantUtil.setupTenant(false);
 
     Contracts getResult = given().get().then().extract().as(Contracts.class);
     assertThat(getResult)
@@ -86,11 +82,8 @@ public class CustomTenantApiIT {
   }
 
   @Test
-  public void testWithLoadSampleAttribute(TestContext context) {
-    // await on the test thread, as the blocking calls below must not run on an event loop thread
-    Async async = context.async();
-    tenantUtil.setupTenant(true).onComplete(context.asyncAssertSuccess(v -> async.complete()));
-    async.awaitSuccess();
+  public void testWithLoadSampleAttribute() {
+    tenantUtil.setupTenant(true);
 
     Contracts getResult = given().get().then().extract().as(Contracts.class);
     assertThat(getResult)

@@ -20,7 +20,6 @@ import com.google.common.io.Resources;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
-import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
@@ -82,13 +81,13 @@ public class IdmConnectContractApiIT {
   }
 
   @Before
-  public void setUp(TestContext context) {
-    tenantUtil.setupTenant(false).onComplete(context.asyncAssertSuccess());
+  public void setUp() {
+    tenantUtil.setupTenant(false);
   }
 
   @After
-  public void tearDown(TestContext context) {
-    tenantUtil.teardownTenant().onComplete(context.asyncAssertSuccess());
+  public void tearDown() {
+    tenantUtil.teardownTenant();
   }
 
   @Test
@@ -215,12 +214,8 @@ public class IdmConnectContractApiIT {
   }
 
   @Test
-  public void testThatBulkDeleteSucceeds(TestContext context) {
-    // load sample data; await on the test thread, as the blocking calls below must not run on an
-    // event loop thread
-    Async async = context.async();
-    tenantUtil.setupTenant(true).onComplete(context.asyncAssertSuccess(v -> async.complete()));
-    async.awaitSuccess();
+  public void testThatBulkDeleteSucceeds() {
+    tenantUtil.setupTenant(true);
 
     String NON_EXISTING_ID = "d4ef9cd7-e57c-4708-bf5a-fba64f622e82";
     String INVALID_ID = "'5c551294-e387-4de2-92d2-5cfe4fa8788d'";
@@ -271,12 +266,8 @@ public class IdmConnectContractApiIT {
   }
 
   @Test
-  public void testThatDeleteIsOnlyPossibleForDraftStatus(TestContext context) {
-    // load sample data; await on the test thread, as the blocking calls below must not run on an
-    // event loop thread
-    Async async = context.async();
-    tenantUtil.setupTenant(true).onComplete(context.asyncAssertSuccess(v -> async.complete()));
-    async.awaitSuccess();
+  public void testThatDeleteIsOnlyPossibleForDraftStatus() {
+    tenantUtil.setupTenant(true);
 
     for (TestEntities entity : TestEntities.values()) {
       int expectedStatusCode = entity.getInitialStatus().equals(Status.DRAFT) ? 204 : 400;
