@@ -3,6 +3,8 @@ package org.folio.utils;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
@@ -10,6 +12,7 @@ import org.folio.rest.tools.utils.ModuleName;
 
 public class TenantUtil {
 
+  private static final long TIMEOUT_SECONDS = 30;
   private final TenantClient tenantClient;
 
   public TenantUtil(TenantClient tenantClient) {
@@ -59,27 +62,30 @@ public class TenantUtil {
     return Future.failedFuture("deleteTenantByOperationId returned " + response.statusCode());
   }
 
-  public Future<Void> setupTenant(TenantAttributes tenantAttributes, boolean loadSample) {
-    if (loadSample) {
-      tenantAttributes.getParameters().add(new Parameter().withKey("loadSample").withValue("true"));
-    }
+  private Future<Void> postTenant(TenantAttributes tenantAttributes) {
     return tenantClient.postTenant(tenantAttributes).compose(this::handlePostTenantResponse);
   }
 
-  public Future<Void> setupTenant(boolean loadSample) {
-    return setupTenant(
+  private void await(Future<Void> future) {
+    try {
+      future.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    } catch (TimeoutException e) {
+      throw new AssertionError(
+          "Tenant operation did not complete within " + TIMEOUT_SECONDS + " seconds", e);
+    }
+  }
+
+  public void setupTenant(boolean loadSample) {
+    TenantAttributes tenantAttributes =
         new TenantAttributes()
-            .withModuleTo(ModuleName.getModuleName() + "-" + ModuleName.getModuleVersion()),
-        loadSample);
+            .withModuleTo(ModuleName.getModuleName() + "-" + ModuleName.getModuleVersion());
+    if (loadSample) {
+      tenantAttributes.getParameters().add(new Parameter().withKey("loadSample").withValue("true"));
+    }
+    await(postTenant(tenantAttributes));
   }
 
-  public Future<Void> setupTenant(TenantAttributes tenantAttributes) {
-    return setupTenant(tenantAttributes, false);
-  }
-
-  public Future<Void> teardownTenant() {
-    return tenantClient
-        .postTenant(new TenantAttributes().withPurge(true))
-        .compose(this::handlePostTenantResponse);
+  public void teardownTenant() {
+    await(postTenant(new TenantAttributes().withPurge(true)));
   }
 }

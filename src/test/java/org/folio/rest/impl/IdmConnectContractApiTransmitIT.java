@@ -82,16 +82,16 @@ public class IdmConnectContractApiTransmitIT {
   }
 
   @Before
-  public void setUp(TestContext context) {
-    tenantUtil.setupTenant(true).onComplete(context.asyncAssertSuccess());
+  public void setUp() {
+    tenantUtil.setupTenant(true);
     idmApiMock.resetAll();
     IdmClientFactory.setIdmClientConfig(
         new IdmClientConfig.Builder().idmContractUrl(idmApiMock.baseUrl()).build());
   }
 
   @After
-  public void tearDown(TestContext context) {
-    tenantUtil.teardownTenant().onComplete(context.asyncAssertSuccess());
+  public void tearDown() {
+    tenantUtil.teardownTenant();
   }
 
   @Test

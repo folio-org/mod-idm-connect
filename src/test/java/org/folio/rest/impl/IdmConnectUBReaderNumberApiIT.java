@@ -130,13 +130,13 @@ public class IdmConnectUBReaderNumberApiIT {
   }
 
   @Before
-  public void setUp(TestContext context) {
-    tenantUtil.setupTenant(true).onComplete(context.asyncAssertSuccess());
+  public void setUp() {
+    tenantUtil.setupTenant(true);
   }
 
   @After
-  public void tearDown(TestContext context) {
-    tenantUtil.teardownTenant().onComplete(context.asyncAssertSuccess());
+  public void tearDown() {
+    tenantUtil.teardownTenant();
   }
 
   private void assertThatLibraryCardEquals(String libraryCard) {
